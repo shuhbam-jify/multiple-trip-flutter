@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/framework.dart';
-import 'package:flutter/src/widgets/placeholder.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:multitrip_user/features/add_member/add_member.dart';
 import 'package:multitrip_user/shared/shared.dart';
@@ -23,14 +21,15 @@ class _AccountNameState extends State<AccountName> {
       appBar: AppBar(
         centerTitle: true,
         elevation: 0,
+        backgroundColor: Colors.transparent,
         leadingWidth: 40.w,
         leading: InkWell(
           onTap: () {
-            AppEnvironment.navigator.pop();
+            Navigator.pop(context);
           },
           child: Icon(
             Icons.arrow_back,
-            color: Colors.black,
+            color: AppColors.black,
           ),
         ),
       ),
@@ -42,7 +41,7 @@ class _AccountNameState extends State<AccountName> {
             Text(
               "Account",
               style: GoogleFonts.poppins(
-                color: Colors.black,
+                color: AppColors.black,
                 fontSize: 18.sp,
                 fontWeight: FontWeight.w500,
               ),
@@ -51,7 +50,7 @@ class _AccountNameState extends State<AccountName> {
             Text(
               "Name",
               style: GoogleFonts.poppins(
-                color: Colors.black,
+                color: AppColors.black,
                 fontSize: 20.sp,
                 fontWeight: FontWeight.w300,
               ),
@@ -60,7 +59,7 @@ class _AccountNameState extends State<AccountName> {
             Text(
               "Let us know how to properly address you",
               style: GoogleFonts.poppins(
-                  color: Colors.black,
+                  color: AppColors.black,
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w300),
             ),
@@ -97,7 +96,7 @@ class _AccountNameState extends State<AccountName> {
                 vertical: 16.h,
               ),
               decoration: BoxDecoration(
-                color: Colors.green,
+                color: AppColors.green,
                 borderRadius: BorderRadius.circular(
                   10.r,
                 ),

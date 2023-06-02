@@ -1,11 +1,9 @@
-import 'dart:ui';
-
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:multitrip_user/multitrip.dart';
-import 'package:multitrip_user/shared/shared.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,17 +20,13 @@ void main() async {
   InternetConnectionChecker().onStatusChange.listen((status) {
     switch (status) {
       case InternetConnectionStatus.connected:
-        // if (ModalRoute.of(AppEnvironment.ctx)?.settings.name ==
-        //     GeneralRoutes.noInternet) {
-        //   AppEnvironment.navigator.pop();
-        // }
-        Logger.logMsg('MAIN', 'Data connection is available.');
         break;
       case InternetConnectionStatus.disconnected:
-        // AppEnvironment.navigator.pushNamed(GeneralRoutes.noInternet);
         break;
     }
   });
 
-  runApp(const MultiTrip());
+  runApp(
+    const MultiTrip(),
+  );
 }

@@ -1,4 +1,3 @@
-export 'bool_extension.dart';
 export 'build_context_extension.dart';
 export 'list_extension.dart';
 export 'num_extension.dart';

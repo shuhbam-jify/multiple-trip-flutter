@@ -19,7 +19,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: '>=2.19.6 <3.0.0'
+  sdk: '>=2.18.6 <3.0.0'
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -28,30 +28,45 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+  assorted_layout_widgets: ^8.0.0
   cached_network_image: ^3.2.3
   carousel_slider: ^4.2.1
-  country_code_picker: ^3.0.0
-  country_picker: ^2.0.20
+  country_picker: ^2.0.18
   cupertino_icons: ^1.0.2
+  custom_map_markers: ^0.0.2+1
+  custom_marker: ^1.0.0
+  drag_and_drop_lists: ^0.3.3
+  equatable: ^2.0.5
   firebase_core: ^2.10.0
   firebase_crashlytics: ^3.1.1
   firebase_messaging: ^14.4.1
   flutter:
     sdk: flutter
+  flutter_bloc: ^8.1.2
+  flutter_keyboard_visibility: ^5.4.1
   flutter_overlay_loader: ^2.0.0
+  flutter_polyline_points: ^1.0.0
   flutter_rating_bar: ^4.0.1
-  flutter_svg: ^2.0.5
+  flutter_slidable: ^2.0.0
+  flutter_svg_provider: ^1.0.3
   fluttertoast: ^8.2.1
-  form_builder_validators: ^8.5.0
+  geocoding: ^2.1.0
   geolocator: ^9.0.2
+  get: ^4.6.5
   get_it: ^7.2.0
   google_fonts: ^4.0.3
-  google_maps_flutter: ^2.2.5
+  google_maps_flutter: ^2.2.3
+  google_maps_webservice: ^0.0.20-nullsafety.5
   internet_connection_checker: ^1.0.0+1
+  intl: ^0.18.0
+  location_picker_flutter_map: ^1.2.0
   permission_handler: ^10.2.0
   provider: ^6.0.5
+  reorderables: ^0.6.0
+  sentry_flutter: ^7.6.3
   shared_preferences: ^2.1.0
   top_modal_sheet: ^2.0.1
+  widget_to_marker: ^1.0.3
 
 dev_dependencies:
   flutter_lints: ^2.0.0

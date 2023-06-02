@@ -28,7 +28,7 @@ abstract class AppText {
         fontSize: 15.sp,
         fontWeight: FontWeight.normal,
       );
-  static TextStyle get text16w400 => GoogleFonts.nunito(
+  static TextStyle get text16w400 => GoogleFonts.poppins(
         fontSize: 16.sp,
         fontWeight: FontWeight.w400,
       );

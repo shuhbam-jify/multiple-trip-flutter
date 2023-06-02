@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/framework.dart';
-import 'package:flutter/src/widgets/placeholder.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:multitrip_user/routes/routes.dart';
+import 'package:multitrip_user/app_enverionment.dart';
+import 'package:multitrip_user/bottomnavigationbar.dart';
+import 'package:multitrip_user/features/account/account_info.dart';
+import 'package:multitrip_user/features/settings/settings.dart';
 import 'package:multitrip_user/shared/shared.dart';
 import 'package:multitrip_user/shared/ui/common/spacing.dart';
 
 class Account extends StatefulWidget {
   final GlobalKey<ScaffoldState>? parentScaffoldKey;
 
-  const Account({super.key, this.parentScaffoldKey});
+  const Account({
+    super.key,
+    this.parentScaffoldKey,
+  });
 
   @override
   State<Account> createState() => _AccountState();
@@ -17,21 +21,30 @@ class Account extends StatefulWidget {
 
 class _AccountState extends State<Account> {
   @override
+  void dispose() {
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.appColor,
       appBar: AppBar(
         centerTitle: true,
         elevation: 0,
+        backgroundColor: Colors.transparent,
         leadingWidth: 40.w,
         leading: InkWell(
           onTap: () {
-            AppEnvironment.navigator
-                .pushReplacementNamed(GeneralRoutes.bottombar, arguments: 0);
+            AppEnvironment.navigator.push(
+              MaterialPageRoute(
+                builder: (context) => PagesWidget(),
+              ),
+            );
           },
           child: Icon(
             Icons.arrow_back,
-            color: Colors.black,
+            color: AppColors.black,
           ),
         ),
       ),
@@ -51,7 +64,7 @@ class _AccountState extends State<Account> {
                     Text(
                       "Harry",
                       style: GoogleFonts.poppins(
-                        color: Colors.black,
+                        color: AppColors.black,
                         fontSize: 20.sp,
                         fontWeight: FontWeight.w300,
                       ),
@@ -81,15 +94,21 @@ class _AccountState extends State<Account> {
                         )
                       ]),
                       decoration: BoxDecoration(
-                          color: AppColors.green,
-                          borderRadius: BorderRadius.circular(20)),
+                        color: AppColors.green,
+                        borderRadius: BorderRadius.circular(
+                          20,
+                        ),
+                      ),
                     )
                   ],
                 ),
                 InkWell(
                   onTap: () {
-                    AppEnvironment.navigator
-                        .pushNamed(GeneralRoutes.accountinfo);
+                    AppEnvironment.navigator.push(
+                      MaterialPageRoute(
+                        builder: (context) => AccountInfo(),
+                      ),
+                    );
                   },
                   child: Container(
                     padding: EdgeInsets.all(15),
@@ -132,10 +151,15 @@ class _AccountState extends State<Account> {
                     ],
                   ),
                   decoration: BoxDecoration(
-                      color: AppColors.green,
-                      borderRadius: BorderRadius.circular(4)),
+                    color: AppColors.green,
+                    borderRadius: BorderRadius.circular(
+                      4,
+                    ),
+                  ),
                 ),
-                sizedBoxWithWidth(10),
+                sizedBoxWithWidth(
+                  10,
+                ),
                 Container(
                   padding: EdgeInsets.symmetric(
                     vertical: 20.h,
@@ -159,48 +183,64 @@ class _AccountState extends State<Account> {
                     ],
                   ),
                   decoration: BoxDecoration(
-                      color: AppColors.green,
-                      borderRadius: BorderRadius.circular(4)),
+                    color: AppColors.green,
+                    borderRadius: BorderRadius.circular(
+                      4,
+                    ),
+                  ),
                 )
               ],
             ),
-            sizedBoxWithHeight(40),
+            sizedBoxWithHeight(
+              40,
+            ),
             Divider(
               thickness: 1.2,
               color: AppColors.greylight,
             ),
             sizedBoxWithHeight(40),
-            Row(
-              children: [
-                Icon(
-                  Icons.settings_outlined,
-                  color: Colors.black,
-                  size: 20,
-                ),
-                sizedBoxWithWidth(3),
-                Text(
-                  "Settings",
-                  style: GoogleFonts.poppins(
-                    color: Colors.black,
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w300,
+            InkWell(
+              onTap: () {
+                ///     BlocProvider.of<DashboardBloc>(context).add(InitBloc());
+
+                AppEnvironment.navigator.push(
+                  MaterialPageRoute(
+                    builder: (context) => Settings(),
                   ),
-                )
-              ],
+                );
+              },
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.settings_outlined,
+                    color: AppColors.black,
+                    size: 20,
+                  ),
+                  sizedBoxWithWidth(3),
+                  Text(
+                    "Settings",
+                    style: GoogleFonts.poppins(
+                      color: AppColors.black,
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w300,
+                    ),
+                  )
+                ],
+              ),
             ),
             sizedBoxWithHeight(10),
             Row(
               children: [
                 Icon(
                   Icons.info,
-                  color: Colors.black,
+                  color: AppColors.black,
                   size: 20,
                 ),
                 sizedBoxWithWidth(3),
                 Text(
                   "Legal",
                   style: GoogleFonts.poppins(
-                    color: Colors.black,
+                    color: AppColors.black,
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w300,
                   ),
@@ -216,7 +256,7 @@ class _AccountState extends State<Account> {
             Text(
               "Total Spending - \$400.00",
               style: GoogleFonts.poppins(
-                  color: Colors.black,
+                  color: AppColors.black,
                   fontWeight: FontWeight.w300,
                   fontSize: 15.sp),
             ),
@@ -224,7 +264,7 @@ class _AccountState extends State<Account> {
             Text(
               "Total miles drive - 50 miles",
               style: GoogleFonts.poppins(
-                  color: Colors.black,
+                  color: AppColors.black,
                   fontWeight: FontWeight.w300,
                   fontSize: 15.sp),
             )

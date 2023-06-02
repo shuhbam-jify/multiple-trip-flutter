@@ -1,99 +1,147 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_overlay_loader/flutter_overlay_loader.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:multitrip_user/app_enverionment.dart';
+import 'package:multitrip_user/blocs/login/login_bloc.dart';
+import 'package:multitrip_user/blocs/token/token_bloc.dart';
+import 'package:multitrip_user/bottomnavigationbar.dart';
 import 'package:multitrip_user/features/auth/login/widgets/nextfloatingbutton.dart';
-import 'package:multitrip_user/routes/routes.dart';
+import 'package:multitrip_user/routes.dart';
 import 'package:multitrip_user/shared/shared.dart';
 import 'package:multitrip_user/shared/ui/common/spacing.dart';
 import 'package:multitrip_user/themes/app_text.dart';
 
 class LoginPassword extends StatefulWidget {
-  const LoginPassword({super.key});
+  final String mobilenumner;
+  const LoginPassword({super.key, required this.mobilenumner});
 
   @override
   State<LoginPassword> createState() => _LoginPasswordState();
 }
 
 class _LoginPasswordState extends State<LoginPassword> {
-  TextEditingController passwordController = TextEditingController();
+  LoginBloc loginBloc = LoginBloc();
+  TextEditingController loginpasswordController = TextEditingController();
+  @override
+  void initState() {
+    super.initState();
+    loginBloc = BlocProvider.of<LoginBloc>(context);
+    print(widget.mobilenumner);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.appColor,
       floatingActionButton: InkWell(
           onTap: () {
-            if (passwordController.text.isEmpty) {
+            if (loginpasswordController.text.isEmpty) {
               context.showSnackBar(context, msg: "Please Enter Password");
-            } else if (passwordController.text.length < 8) {
+            } else if (loginpasswordController.text.length < 8) {
               context.showSnackBar(context,
                   msg: "Minimum 8 Characters Required ");
             } else {
-              AppEnvironment.navigator.pushNamed(AuthRoutes.signup);
+              loginBloc.add(
+                LoginByPassword(
+                  password: loginpasswordController.text,
+                  mobilenumber: widget.mobilenumner,
+                ),
+              );
             }
           },
           child: NextFloatingButton()),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                sizedBoxWithHeight(0),
-                InkWell(
-                  onTap: () {
-                    AppEnvironment.navigator.pop();
-                  },
-                  child: Icon(
-                    Icons.arrow_back,
-                    color: Colors.black,
-                    size: 20,
+      body: BlocListener<LoginBloc, LoginState>(
+        listener: (context, state) {
+          if (state is LoadingLoading) {
+            Loader.show(context,
+                progressIndicator: CircularProgressIndicator(
+                  color: AppColors.appColor,
+                ));
+          } else if (state is LoginFail) {
+            context.showSnackBar(context, msg: state.error);
+            Loader.hide();
+          } else if (state is TokenExpired) {
+            Loader.hide();
+            BlocProvider.of<TokenBloc>(context)
+                .add(FetchAccessToken(context: context));
+          } else if (state is LoginPassowrdSuccess) {
+            Loader.hide();
+            AppEnvironment.navigator.pushNamedAndRemoveUntil(
+              GeneralRoutes.pages,
+              (route) => false,
+            );
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => PagesWidget()),
+              (route) => false,
+            );
+          }
+        },
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  sizedBoxWithHeight(0),
+                  InkWell(
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
+                    child: Icon(
+                      Icons.arrow_back,
+                      color: AppColors.black,
+                      size: 20,
+                    ),
                   ),
-                ),
-                Text("Welcome back, Signin to\ncontinue",
-                    style: AppText.text22w500.copyWith(
-                      color: Colors.black,
-                    )),
-                sizedBoxWithHeight(80),
-                Container(
-                  color: Colors.grey.shade300,
-                  child: TextFormField(
-                    controller: passwordController,
-                    cursorColor: AppColors.grey500,
-                    obscureText: true,
-                    decoration: InputDecoration(
-                        isDense: true,
-                        // fillColor: Colors.grey.shade300,
-                        // filled: true,
+                  Text("Welcome back, Signin to\ncontinue",
+                      style: AppText.text22w500.copyWith(
+                        color: AppColors.black,
+                      )),
+                  sizedBoxWithHeight(80),
+                  Container(
+                    color: Colors.grey.shade300,
+                    child: TextFormField(
+                      controller: loginpasswordController,
+                      cursorColor: AppColors.grey500,
+                      obscureText: true,
+                      decoration: InputDecoration(
+                          isDense: true,
+                          // fillColor: Colors.grey.shade300,
+                          // filled: true,
 
-                        hintText: "Enter password",
-                        hintStyle: GoogleFonts.nunito(
-                          color: Colors.black,
-                          fontWeight: FontWeight.w400,
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(
-                          color: Colors.black,
-                          width: 1,
-                        )),
-                        border: OutlineInputBorder(
-                            borderSide: BorderSide(
-                          color: Colors.black,
-                          width: 2,
-                        ))),
+                          hintText: "Enter password",
+                          hintStyle: GoogleFonts.nunito(
+                            color: AppColors.black,
+                            fontWeight: FontWeight.w400,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                            color: AppColors.black,
+                            width: 1,
+                          )),
+                          border: OutlineInputBorder(
+                              borderSide: BorderSide(
+                            color: AppColors.black,
+                            width: 2,
+                          ))),
+                    ),
                   ),
-                ),
-                SizedBox(
-                  height: 20,
-                ),
-                Text(
-                  "Forgot Password?",
-                  style: GoogleFonts.nunito(
-                    color: Colors.blue.shade800,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
+                  SizedBox(
+                    height: 20,
                   ),
-                )
-              ],
+                  Text(
+                    "Forgot Password?",
+                    style: GoogleFonts.nunito(
+                      color: Colors.blue.shade800,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  )
+                ],
+              ),
             ),
           ),
         ),

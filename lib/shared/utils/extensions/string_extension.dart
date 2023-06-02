@@ -1,16 +1,4 @@
-import 'package:flutter/material.dart';
-import 'package:multitrip_user/shared/shared.dart';
-
 extension StringExtension on String {
-  /// Method used to precache the asset image into engine
-  Future<void> preCacheLocalImages(BuildContext context) async {
-    try {
-      await precacheImage(AssetImage(this), context);
-    } catch (e, st) {
-      Logger.logError('CommonUtils', e, stackTrace: st);
-    }
-  }
-
   bool get isNetworkUrl {
     return contains('http');
   }

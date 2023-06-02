@@ -1,104 +1,116 @@
 import 'package:flutter/material.dart';
-import 'package:multitrip_user/features/auth/login/logic/auth_controller.dart';
-import 'package:multitrip_user/features/common/splashbackground.dart';
-import 'package:multitrip_user/features/logic/app_permission_handler.dart';
-import 'package:multitrip_user/routes/routes.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_overlay_loader/flutter_overlay_loader.dart';
+import 'package:multitrip_user/blocs/token/token_bloc.dart';
+import 'package:multitrip_user/multitrip.dart';
+import 'package:multitrip_user/shared/ui/common/spacing.dart';
+import 'package:multitrip_user/widgets/splashbackground.dart';
 import 'package:multitrip_user/shared/shared.dart';
 import 'package:multitrip_user/themes/app_text.dart';
-import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+  const SplashScreen({
+    super.key,
+  });
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  TokenBloc tokenBloc = TokenBloc();
   @override
   void initState() {
-    Provider.of<AuthController>(context, listen: false)
-        .getrefreshtoken(context: context);
-    Future.delayed(Duration(seconds: 3), () {
-      isLoggedIn();
-    });
+    tokenBloc = BlocProvider.of<TokenBloc>(context);
+
+    checkrefreshtoken();
     super.initState();
+  }
+
+  Future<void> checkrefreshtoken() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    if (prefs.getString(Strings.refreshtoken) == null) {
+      tokenBloc.add(FetchRefreshToken(context: context));
+    } else {
+      tokenBloc.add(FetchAccessToken(context: context));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    ScreenUtil.instance = ScreenUtil()..init(context);
+    ScreenUtil.instance = ScreenUtil()
+      ..init(
+        context,
+      );
 
-    return FutureBuilder(
-        future: Provider.of<AppPermissionProvider>(context, listen: false)
-            .fetchuserlocation(),
-        builder: (context, s) {
-          return Scaffold(
-              backgroundColor: AppColors.appColor,
-              body: Column(
-                children: [
-                  SplashBackground(),
-                  Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        SizedBox(
-                          height: 40.h,
-                        ),
-                        Text(
-                          "Welcome To First Choice\nDesignated Drivers",
-                          textAlign: TextAlign.center,
-                          style: AppText.text28w500.copyWith(
-                            color: Colors.black,
-                          ),
-                        ),
-                        SizedBox(
-                          height: 80.h,
-                        ),
-                        InkWell(
-                          onTap: () {
-                            isLoggedIn();
-                          },
-                          child: Container(
-                            width: double.infinity,
-                            child: Center(
-                              child: Text(
-                                "Get Started",
-                                style: AppText.text15w400.copyWith(
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                            padding: EdgeInsets.symmetric(
-                              vertical: 16.h,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.green,
-                              borderRadius: BorderRadius.circular(
-                                10.r,
-                              ),
-                            ),
-                          ),
-                        )
-                      ],
-                    ),
-                  ),
-                ],
+    return BlocListener<TokenBloc, TokenState>(
+      listener: (context, state) {
+        if (state is TokenLoading) {
+          Loader.show(context,
+              progressIndicator: CircularProgressIndicator(
+                color: AppColors.appColor,
               ));
-        });
-  }
-}
-
-Future isLoggedIn() async {
-  final SharedPreferences prefs = await SharedPreferences.getInstance();
-  final String istokenavailable = prefs.getString(Strings.userid) ?? "";
-  if (istokenavailable == "") {
-    AppEnvironment.navigator.pushReplacementNamed(AuthRoutes.entermobile);
-  } else {
-    AppEnvironment.navigator.pushReplacementNamed(
-      GeneralRoutes.bottombar,
+        } else if (state is AccessTokenLoaded) {
+          Loader.hide();
+          isLoggedIn(context: context);
+        } else if (state is TokenFaied) {
+          Loader.hide();
+        }
+      },
+      child: Scaffold(
+          backgroundColor: AppColors.appColor,
+          body: Column(
+            children: [
+              SplashBackground(),
+              Padding(
+                padding: EdgeInsets.all(
+                  16,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    sizedBoxWithHeight(40),
+                    Text(
+                      "Welcome To First Choice\nDesignated Drivers",
+                      textAlign: TextAlign.center,
+                      style: AppText.text28w500.copyWith(
+                        color: AppColors.black,
+                      ),
+                    ),
+                    sizedBoxWithHeight(80),
+                    InkWell(
+                      onTap: () {
+                        isLoggedIn(
+                          context: context,
+                        );
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        child: Center(
+                          child: Text(
+                            "Get Started",
+                            style: AppText.text15w400.copyWith(
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                        padding: EdgeInsets.symmetric(
+                          vertical: 16.h,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.green,
+                          borderRadius: BorderRadius.circular(
+                            10.r,
+                          ),
+                        ),
+                      ),
+                    )
+                  ],
+                ),
+              ),
+            ],
+          )),
     );
   }
 }

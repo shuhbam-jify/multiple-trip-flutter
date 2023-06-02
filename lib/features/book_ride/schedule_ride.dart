@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:multitrip_user/shared/shared.dart';
 import 'package:multitrip_user/shared/ui/common/spacing.dart';
 import 'package:multitrip_user/themes/app_text.dart';
@@ -25,10 +26,11 @@ class _ScheduleRideState extends State<ScheduleRide> {
             dialogBackgroundColor: Colors.white,
             textButtonTheme: TextButtonThemeData(
                 style: ButtonStyle(
-              foregroundColor: MaterialStateProperty.all<Color>(Colors.black),
+              foregroundColor:
+                  MaterialStateProperty.all<Color>(AppColors.black),
             )),
             colorScheme: theme.colorScheme.copyWith(
-              primary: Colors.green,
+              primary: AppColors.green,
               onPrimary: Colors.white,
             ),
             textTheme: theme.textTheme.copyWith(),
@@ -57,10 +59,11 @@ class _ScheduleRideState extends State<ScheduleRide> {
               dialogBackgroundColor: Colors.white,
               textButtonTheme: TextButtonThemeData(
                   style: ButtonStyle(
-                foregroundColor: MaterialStateProperty.all<Color>(Colors.black),
+                foregroundColor:
+                    MaterialStateProperty.all<Color>(AppColors.black),
               )),
               colorScheme: theme.colorScheme.copyWith(
-                primary: Colors.green,
+                primary: AppColors.green,
                 onPrimary: Colors.white,
               ),
               textTheme: theme.textTheme.copyWith(),
@@ -88,11 +91,11 @@ class _ScheduleRideState extends State<ScheduleRide> {
         titleSpacing: 0,
         leading: InkWell(
           onTap: () {
-            AppEnvironment.navigator.pop();
+            Navigator.pop(context);
           },
           child: Icon(
             Icons.close,
-            color: Colors.black,
+            color: AppColors.black,
           ),
         ),
       ),
@@ -102,7 +105,7 @@ class _ScheduleRideState extends State<ScheduleRide> {
           children: [
             Text(
               "Schedule a ride",
-              style: AppText.text22w500.copyWith(color: Colors.black),
+              style: AppText.text22w500.copyWith(color: AppColors.black),
             ),
             sizedBoxWithHeight(80),
             InkWell(
@@ -110,15 +113,15 @@ class _ScheduleRideState extends State<ScheduleRide> {
                 _selectDate(context);
               },
               child: Text(
-                "Thu, 2 Feb",
+                DateFormat("EEEE, dd MMM").format(selectedDate),
                 style: AppText.text14w400.copyWith(
-                  color: Colors.black,
+                  color: AppColors.black,
                 ),
               ),
             ),
             sizedBoxWithHeight(20),
             Divider(
-              color: Colors.black,
+              color: AppColors.black,
               thickness: 0.4,
             ),
             sizedBoxWithHeight(20),
@@ -127,9 +130,15 @@ class _ScheduleRideState extends State<ScheduleRide> {
                 _selectTime(context);
               },
               child: Text(
-                "11:10 am - 11:20 am",
+                "${DateFormat("hh:mm a").format(
+                  DateTime(selectedDate.year, 0, 0, selectedTime.hour,
+                      selectedTime.minute),
+                )} - ${DateFormat("hh:mm a").format(
+                  DateTime(selectedDate.year, 0, 0, selectedTime.hour,
+                      selectedTime.minute + 20),
+                )}",
                 style: AppText.text14w400.copyWith(
-                  color: Colors.black,
+                  color: AppColors.black,
                 ),
               ),
             ),
@@ -151,7 +160,7 @@ class _ScheduleRideState extends State<ScheduleRide> {
                 vertical: 16.h,
               ),
               decoration: BoxDecoration(
-                color: Colors.green,
+                color: AppColors.green,
                 borderRadius: BorderRadius.circular(
                   10.r,
                 ),

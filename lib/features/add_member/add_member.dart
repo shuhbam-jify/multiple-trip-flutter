@@ -1,11 +1,10 @@
-import 'dart:developer';
-
 import 'package:country_picker/country_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:multitrip_user/routes/routes.dart';
+import 'package:multitrip_user/logic/add_member/member_controller.dart';
 import 'package:multitrip_user/shared/shared.dart';
 import 'package:multitrip_user/shared/ui/common/spacing.dart';
 import 'package:multitrip_user/themes/app_text.dart';
+import 'package:provider/provider.dart';
 
 class AddMember extends StatefulWidget {
   const AddMember({super.key});
@@ -27,13 +26,13 @@ class _AddMemberState extends State<AddMember> {
     displayNameNoCountryCode: "",
     e164Key: "",
   );
-  TextEditingController firstController = TextEditingController();
-  TextEditingController lastnameController = TextEditingController();
-  TextEditingController emailController = TextEditingController();
-  TextEditingController addressController = TextEditingController();
-  TextEditingController phoneController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
+    final membercontroller = Provider.of<MembersController>(
+      context,
+      listen: true,
+    );
     return Scaffold(
       backgroundColor: AppColors.appColor,
       appBar: AppBar(
@@ -44,16 +43,16 @@ class _AddMemberState extends State<AddMember> {
         title: Text(
           "New member",
           style: AppText.text15w500.copyWith(
-            color: Colors.black,
+            color: AppColors.black,
           ),
         ),
         leading: InkWell(
           onTap: () {
-            AppEnvironment.navigator.pop();
+            Navigator.pop(context);
           },
           child: Icon(
             Icons.arrow_back,
-            color: Colors.black,
+            color: AppColors.black,
           ),
         ),
       ),
@@ -77,33 +76,37 @@ class _AddMemberState extends State<AddMember> {
                 25,
               ),
               CommonTextField(
-                controller: firstController,
+                controller: membercontroller.firstnamecontroller,
                 title: "First Name",
               ),
               CommonTextField(
-                controller: lastnameController,
+                controller: membercontroller.lastnameController,
                 title: "Last Name",
               ),
               CommonTextField(
-                controller: emailController,
+                controller: membercontroller.emailController,
                 title: "Email",
               ),
               CommonTextField(
-                controller: addressController,
+                controller: membercontroller.addressController,
                 title: "Address",
                 maxLines: 3,
               ),
-              sizedBoxWithHeight(15),
+              sizedBoxWithHeight(
+                15,
+              ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     "Phone Number",
                     style: AppText.text15Normal.copyWith(
-                      color: Colors.black,
+                      color: AppColors.black,
                     ),
                   ),
-                  sizedBoxWithHeight(5),
+                  sizedBoxWithHeight(
+                    5,
+                  ),
                   Row(
                     children: [
                       InkWell(
@@ -114,8 +117,6 @@ class _AddMemberState extends State<AddMember> {
                             showPhoneCode:
                                 true, // optional. Shows phone code before the country name.
                             onSelect: (Country scountry) {
-                              log(scountry.name + scountry.countryCode);
-
                               setState(() {
                                 country = scountry;
                               });
@@ -134,12 +135,14 @@ class _AddMemberState extends State<AddMember> {
                             children: [
                               Text(
                                 country.flagEmoji,
-                                style: TextStyle(fontSize: 25.sp),
+                                style: TextStyle(
+                                  fontSize: 25.sp,
+                                ),
                               ),
                               sizedBoxWithWidth(5),
                               Icon(
                                 Icons.arrow_drop_down_rounded,
-                                color: Colors.black,
+                                color: AppColors.black,
                                 size: 15,
                               ),
                             ],
@@ -149,19 +152,23 @@ class _AddMemberState extends State<AddMember> {
                       sizedBoxWithWidth(10),
                       Expanded(
                         child: Container(
-                          padding: EdgeInsets.only(left: 10.w),
+                          padding: EdgeInsets.only(
+                            left: 10.w,
+                          ),
                           child: Row(
                             children: [
                               Text(country.phoneCode,
                                   style: AppText.text15Normal.copyWith(
-                                    color: Colors.black,
+                                    color: AppColors.black,
                                   )),
-                              sizedBoxWithWidth(10),
+                              sizedBoxWithWidth(
+                                10,
+                              ),
                               Expanded(
                                 child: TextFormField(
                                   keyboardType: TextInputType.phone,
                                   maxLength: 11,
-                                  controller: phoneController,
+                                  controller: membercontroller.phoneController,
                                   decoration: InputDecoration(
                                     counterText: '',
                                     hintText: "Mobile Number",
@@ -181,7 +188,9 @@ class _AddMemberState extends State<AddMember> {
                   ),
                 ],
               ),
-              sizedBoxWithHeight(30),
+              sizedBoxWithHeight(
+                30,
+              ),
               Text(
                   "By tapping `\"Add member\", you confirm that your friend aggreed to share their contact information with us and to recieve SMS about this trip.",
                   style: AppText.text15w400.copyWith(
@@ -189,24 +198,35 @@ class _AddMemberState extends State<AddMember> {
                   )),
               InkWell(
                 onTap: () {
-                  if (firstController.text.isEmpty) {
-                    context.showSnackBar(context,
-                        msg: 'Please Enter First Name');
-                  } else if (lastnameController.text.isEmpty) {
-                    context.showSnackBar(context,
-                        msg: "Please Enter Last Name");
-                  } else if (emailController.text.isValidEmail() == false) {
-                    context.showSnackBar(context,
-                        msg: "Please Enter Valid Email");
-                  } else if (addressController.text.isEmpty) {
-                    context.showSnackBar(context, msg: "Please Enter Address");
-                  } else if (phoneController.text.isEmpty) {
-                    context.showSnackBar(context,
-                        msg: "Please enter mobile number");
-                  } else {
-                    AppEnvironment.navigator.pushNamed(
-                      GeneralRoutes.scheduleride,
+                  if (membercontroller.firstnamecontroller.text.isEmpty) {
+                    context.showSnackBar(
+                      context,
+                      msg: 'Please Enter First Name',
                     );
+                  } else if (membercontroller.lastnameController.text.isEmpty) {
+                    context.showSnackBar(
+                      context,
+                      msg: "Please Enter Last Name",
+                    );
+                  } else if (membercontroller.emailController.text
+                          .isValidEmail() ==
+                      false) {
+                    context.showSnackBar(
+                      context,
+                      msg: "Please Enter Valid Email",
+                    );
+                  } else if (membercontroller.addressController.text.isEmpty) {
+                    context.showSnackBar(
+                      context,
+                      msg: "Please Enter Address",
+                    );
+                  } else if (membercontroller.phoneController.text.isEmpty) {
+                    context.showSnackBar(
+                      context,
+                      msg: "Please enter mobile number",
+                    );
+                  } else {
+                    membercontroller.addmember(context: context);
                   }
                 },
                 child: Container(
@@ -226,7 +246,7 @@ class _AddMemberState extends State<AddMember> {
                     vertical: 16.h,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.green,
+                    color: AppColors.green,
                     borderRadius: BorderRadius.circular(
                       10.r,
                     ),
@@ -245,22 +265,25 @@ class CommonTextField extends StatelessWidget {
   final String title;
   final TextEditingController controller;
   final int? maxLines;
-  const CommonTextField(
-      {super.key,
-      required this.title,
-      this.maxLines,
-      required this.controller});
+  const CommonTextField({
+    super.key,
+    required this.title,
+    this.maxLines,
+    required this.controller,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        sizedBoxWithHeight(15),
+        sizedBoxWithHeight(
+          15,
+        ),
         Text(
           title,
           style: AppText.text15Normal.copyWith(
-            color: Colors.black,
+            color: AppColors.black,
           ),
         ),
         sizedBoxWithHeight(5),

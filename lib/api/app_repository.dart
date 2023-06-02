@@ -3,16 +3,24 @@ import 'package:multitrip_user/api/api_base_helper.dart';
 class AppRepository {
   ApiBaseHelper helper = ApiBaseHelper();
 
+// Refresh Token API
   Future<dynamic> getrefreshtoken() async {
-    final response = await helper.post("get_refresh_token", {
-      "client_id": "ID:ZLEAC0HTM7V206H784M2",
-      "client_secret": "KEY:U2IJZF01G64O4YQDGHCX",
-    }, {});
+    final response = await helper.post(
+      "get_refresh_token",
+      {
+        "client_id": "ID:ZLEAC0HTM7V206H784M2",
+        "client_secret": "KEY:U2IJZF01G64O4YQDGHCX",
+      },
+      {},
+    );
 
     return response;
   }
 
-  Future<dynamic> getaccesstoken({required String refreshtoken}) async {
+// Access Token API
+  Future<dynamic> getaccesstoken({
+    required String refreshtoken,
+  }) async {
     final response = await helper.post(
       "get_access_token",
       {"refresh_token": refreshtoken},
@@ -22,6 +30,7 @@ class AppRepository {
     return response;
   }
 
+// Check Moblie Number
   Future<dynamic> douserlogin({
     required String accesstoken,
     required String devicetype,
@@ -43,6 +52,7 @@ class AppRepository {
     return response;
   }
 
+// Verify OTP
   Future<dynamic> verifyOTP(
       {required String mobilenumber,
       required String otp,
@@ -61,6 +71,7 @@ class AppRepository {
     return response;
   }
 
+// Create new User
   Future<dynamic> usersignup(
       {required String userid,
       required String email,
@@ -68,7 +79,246 @@ class AppRepository {
       required String accesstoken}) async {
     final response = await helper.post(
       "passenger_signup",
-      {"user_id": userid, "email": email, "password": password},
+      {
+        "user_id": userid,
+        "email": email,
+        "password": password,
+      },
+      {
+        "access_token": accesstoken,
+      },
+    );
+
+    return response;
+  }
+
+// Get Member List
+  Future<dynamic> getmemberslist({
+    required String userid,
+    required String accesstoken,
+  }) async {
+    final response = await helper.post(
+      "members_list",
+      {
+        "user_id": userid,
+      },
+      {
+        "access_token": accesstoken,
+      },
+    );
+
+    return response;
+  }
+
+// Add New Member
+  Future<dynamic> addmember({
+    required String userid,
+    required String accesstoken,
+    required String fname,
+    required String lname,
+    required String mobile_number,
+    required String email,
+    required String address,
+  }) async {
+    final response = await helper.post(
+      "add_member",
+      {
+        "user_id": userid,
+        "fname": fname,
+        "lname": lname,
+        "mobile_number": mobile_number,
+        "email": email,
+        "address": address
+      },
+      {
+        "access_token": accesstoken,
+      },
+    );
+
+    return response;
+  }
+
+// Get User Dashboard
+  Future<dynamic> getdashboarddata({
+    required String accesstoken,
+    required String userid,
+    required String latitude,
+    required String longitude,
+  }) async {
+    final response = await helper.post(
+      "dashboard",
+      {
+        "user_id": userid,
+        "latitude": latitude,
+        "longitude": longitude,
+      },
+      {
+        "access_token": accesstoken,
+      },
+    );
+
+    return response;
+  }
+
+// Login By Password
+  Future<dynamic> loginbypassword({
+    required String mobilenumber,
+    required String password,
+    required String accesstoken,
+  }) async {
+    final response = await helper.post(
+      "login_by_password",
+      {
+        "mobile_number": mobilenumber,
+        "password": password,
+      },
+      {
+        "access_token": accesstoken,
+      },
+    );
+
+    return response;
+  }
+
+  // Get Ride
+  Future<dynamic> confirmuseride({
+    required String accesstoken,
+    required dynamic pickuplocation,
+    required dynamic droplocation,
+    required String userid,
+  }) async {
+    var body = {
+      "user_id": userid,
+      "pickup_location": pickuplocation,
+      "drop_location": droplocation,
+      "member_id": ""
+    };
+    print(body);
+    final response = await helper.post(
+      "confirm_ride",
+      body,
+      {
+        "access_token": accesstoken,
+      },
+    );
+
+    return response;
+  }
+
+  //add vehicle
+  Future<dynamic> addvehicle({
+    required String userid,
+    required String accesstoken,
+    required String vehicle_name,
+    required String vehicle_type,
+    required String vehicle_color,
+    required String vehicle_number,
+  }) async {
+    final response = await helper.post(
+      "add_vehicle",
+      {
+        "user_id": userid,
+        "vehicle_name": vehicle_name,
+        "vehicle_type": vehicle_type,
+        "vehicle_color": vehicle_color,
+        "vehicle_number": vehicle_number,
+      },
+      {
+        "access_token": accesstoken,
+      },
+    );
+
+    return response;
+  }
+
+// Get Vehicle List
+  Future<dynamic> getvehicle({
+    required String userid,
+    required String accesstoken,
+  }) async {
+    final response = await helper.post(
+      "vehicle_list",
+      {
+        "user_id": userid,
+      },
+      {
+        "access_token": accesstoken,
+      },
+    );
+
+    return response;
+  }
+
+  //delete vehicle
+  Future<dynamic> deletevehicle({
+    required String userid,
+    required String accesstoken,
+    required String vehicle_id,
+  }) async {
+    final response = await helper.post(
+      "delete_vehicle",
+      {"user_id": userid, "vehicle_id": vehicle_id},
+      {
+        "access_token": accesstoken,
+      },
+    );
+
+    return response;
+  }
+
+  Future<dynamic> douserlogout({
+    required String accesstoken,
+    required String userid,
+  }) async {
+    final response = await helper.post(
+      "logout",
+      {
+        "user_id": userid,
+      },
+      {
+        "access_token": accesstoken,
+      },
+    );
+
+    return response;
+  }
+
+  Future<dynamic> fetchaddress({
+    required String accesstoken,
+    required String userid,
+  }) async {
+    print("User id is $userid");
+    final response = await helper.post(
+      "address_list",
+      {
+        "user_id": userid,
+      },
+      {
+        "access_token": accesstoken,
+      },
+    );
+
+    return response;
+  }
+
+  Future<dynamic> bookride(
+      {required String accesstoken,
+      required dynamic booking_number,
+      required dynamic vehicle_id,
+      required String notes,
+      required String payment_mode,
+      required String user_id}) async {
+    var body = {
+      "user_id": user_id,
+      "booking_number": booking_number,
+      "vehicle_id": vehicle_id,
+      "notes": notes,
+      "payment_mode": payment_mode
+    };
+    print(body);
+    final response = await helper.post(
+      "book_ride",
+      body,
       {
         "access_token": accesstoken,
       },

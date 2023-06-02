@@ -1,9 +1,6 @@
 import 'package:country_picker/country_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/framework.dart';
-import 'package:flutter/src/widgets/placeholder.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:multitrip_user/features/add_member/add_member.dart';
 import 'package:multitrip_user/shared/shared.dart';
 import 'package:multitrip_user/shared/ui/common/spacing.dart';
 import 'package:multitrip_user/themes/app_text.dart';
@@ -36,25 +33,29 @@ class _AccountPhoneState extends State<AccountPhone> {
         centerTitle: true,
         elevation: 0,
         leadingWidth: 40.w,
+        backgroundColor: Colors.transparent,
         leading: InkWell(
           onTap: () {
-            AppEnvironment.navigator.pop();
+            Navigator.pop(context);
           },
           child: Icon(
             Icons.arrow_back,
-            color: Colors.black,
+            color: AppColors.black,
           ),
         ),
       ),
       body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+        padding: EdgeInsets.symmetric(
+          horizontal: 16.w,
+          vertical: 10.h,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               "Account",
               style: GoogleFonts.poppins(
-                color: Colors.black,
+                color: AppColors.black,
                 fontSize: 18.sp,
                 fontWeight: FontWeight.w500,
               ),
@@ -63,7 +64,7 @@ class _AccountPhoneState extends State<AccountPhone> {
             Text(
               "Phone Number",
               style: GoogleFonts.poppins(
-                color: Colors.black,
+                color: AppColors.black,
                 fontSize: 18.sp,
                 fontWeight: FontWeight.w400,
               ),
@@ -72,7 +73,7 @@ class _AccountPhoneState extends State<AccountPhone> {
             Text(
               "Personalize your experience",
               style: GoogleFonts.poppins(
-                  color: Colors.black,
+                  color: AppColors.black,
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w300),
             ),
@@ -86,7 +87,9 @@ class _AccountPhoneState extends State<AccountPhone> {
                       context: context,
                       showPhoneCode:
                           true, // optional. Shows phone code before the country name.
-                      onSelect: (Country scountry) {
+                      onSelect: (
+                        Country scountry,
+                      ) {
                         setState(() {
                           country = scountry;
                         });
@@ -105,12 +108,14 @@ class _AccountPhoneState extends State<AccountPhone> {
                       children: [
                         Text(
                           country.flagEmoji,
-                          style: TextStyle(fontSize: 25.sp),
+                          style: TextStyle(
+                            fontSize: 25.sp,
+                          ),
                         ),
                         sizedBoxWithWidth(5),
                         Icon(
                           Icons.arrow_drop_down_rounded,
-                          color: Colors.black,
+                          color: AppColors.black,
                           size: 15,
                         ),
                       ],
@@ -120,12 +125,14 @@ class _AccountPhoneState extends State<AccountPhone> {
                 sizedBoxWithWidth(10),
                 Expanded(
                   child: Container(
-                    padding: EdgeInsets.only(left: 10.w),
+                    padding: EdgeInsets.only(
+                      left: 10.w,
+                    ),
                     child: Row(
                       children: [
                         Text(country.phoneCode,
                             style: AppText.text15Normal.copyWith(
-                              color: Colors.black,
+                              color: AppColors.black,
                             )),
                         sizedBoxWithWidth(10),
                         Expanded(
@@ -177,7 +184,7 @@ class _AccountPhoneState extends State<AccountPhone> {
                 vertical: 16.h,
               ),
               decoration: BoxDecoration(
-                color: Colors.green,
+                color: AppColors.green,
                 borderRadius: BorderRadius.circular(
                   10.r,
                 ),

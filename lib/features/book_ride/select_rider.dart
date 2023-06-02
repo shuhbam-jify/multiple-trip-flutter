@@ -1,251 +1,232 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/framework.dart';
-import 'package:flutter/src/widgets/placeholder.dart';
-import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_overlay_loader/flutter_overlay_loader.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:multitrip_user/models/neardrivers.dart';
+import 'package:multitrip_user/app_enverionment.dart';
+import 'package:multitrip_user/blocs/bookride/bookride_bloc.dart';
+import 'package:multitrip_user/features/book_ride/booking_otp.dart';
 import 'package:multitrip_user/shared/shared.dart';
-import 'package:multitrip_user/shared/ui/common/app_image.dart';
 import 'package:multitrip_user/shared/ui/common/spacing.dart';
 import 'package:multitrip_user/themes/app_text.dart';
 
 class SelectRider extends StatefulWidget {
-  const SelectRider({super.key});
+  final String bookingid;
+  final String amount;
+  final LatLng pickuplatlong;
+  final LatLng droplatlong;
+  final Set<Polyline> polylines;
+  final String vehicleid;
+  const SelectRider({
+    super.key,
+    required this.amount,
+    required this.polylines,
+    required this.droplatlong,
+    required this.pickuplatlong,
+    required this.bookingid,
+    required this.vehicleid,
+  });
 
   @override
   State<SelectRider> createState() => _SelectRiderState();
 }
 
 class _SelectRiderState extends State<SelectRider> {
-  late GoogleMapController mapController;
-  List<NearDrivers> neardrivers = [
-    NearDrivers(
-      name: "Sam",
-      price: "40",
-      rating: 4,
-      distance: 3.toString(),
-      time: 5.toString(),
-    ),
-    NearDrivers(
-        name: "Ram",
-        price: "30",
-        rating: 1.4,
-        distance: 3.toString(),
-        time: 5.toString()),
-    NearDrivers(
-        name: "Aam",
-        price: "540",
-        rating: 4.4,
-        distance: 3.toString(),
-        time: 5.toString()),
-    NearDrivers(
-        name: "Rahul",
-        price: "140",
-        rating: 2,
-        distance: 3.toString(),
-        time: 5.toString()),
-    NearDrivers(
-        name: "Test User",
-        price: "80",
-        rating: 5,
-        distance: 3.toString(),
-        time: 5.toString()),
-    NearDrivers(
-        name: "Test User",
-        price: "80",
-        rating: 5,
-        distance: 3.toString(),
-        time: 5.toString()),
-    NearDrivers(
-        name: "Test User",
-        price: "80",
-        rating: 5,
-        distance: 3.toString(),
-        time: 5.toString()),
-    NearDrivers(
-        name: "Test User",
-        price: "80",
-        rating: 5,
-        distance: 3.toString(),
-        time: 5.toString()),
-  ];
+  BookrideBloc bookrideBloc = BookrideBloc();
+
+  @override
+  void initState() {
+    bookrideBloc = BlocProvider.of<BookrideBloc>(context);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  TextEditingController notecontroller = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Stack(
-          children: [
-            GoogleMap(
-              zoomGesturesEnabled: true,
-              zoomControlsEnabled: false,
-              markers: <Marker>{
-                Marker(
-                  markerId: const MarkerId('marker_1'),
-                  draggable: true,
-                  onDrag: (values) {
-                    //    value.ondrag(values);
-                  },
-                  position: LatLng(
-                    37.42796133580664,
-                    -122.085749655962,
-                  ),
-                  infoWindow: const InfoWindow(
-                      title: 'Marker Title', snippet: 'Marker Snippet'),
-                  icon: BitmapDescriptor.defaultMarkerWithHue(
-                      BitmapDescriptor.hueRed),
+      body: BlocListener<BookrideBloc, BookrideState>(
+        listener: (context, state) {
+          if (state is BookRideLoading) {
+            Loader.show(context,
+                progressIndicator: CircularProgressIndicator(
+                  color: AppColors.appColor,
+                ));
+          } else if (state is BookRideFail) {
+            Loader.hide();
+            context.showSnackBar(context, msg: state.error);
+          } else if (state is BookRideLoaded) {
+            Loader.hide();
+            AppEnvironment.navigator.push(
+              MaterialPageRoute(
+                builder: (context) => BookingOTP(
+                  droplatlong: widget.droplatlong,
+                  pickuplatlong: widget.pickuplatlong,
+                  polylines: widget.polylines,
                 ),
-              },
-              gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
-                Factory<OneSequenceGestureRecognizer>(
-                  () => EagerGestureRecognizer(),
-                ),
-              },
-              onMapCreated: (controller) {
-                mapController = controller;
-
-                mapController.moveCamera(
-                  CameraUpdate.newLatLng(
-                    LatLng(
-                      37.42796133580664,
-                      -122.085749655962,
+              ),
+            );
+          } else if (state is TokenExpired) {
+            Loader.hide();
+            context.showSnackBar(context, msg: "Token Expired");
+          }
+        },
+        child: SafeArea(
+          child: Stack(
+            children: [
+              GoogleMap(
+                polylines: widget.polylines,
+                zoomGesturesEnabled: true,
+                zoomControlsEnabled: false,
+                markers: <Marker>{
+                  Marker(
+                    markerId: const MarkerId('marker_1'),
+                    draggable: false,
+                    position: LatLng(
+                      widget.droplatlong.latitude,
+                      widget.droplatlong.longitude,
+                    ),
+                    infoWindow: const InfoWindow(
+                      title: 'Marker Title',
+                      snippet: 'Marker Snippet',
+                    ),
+                    icon: BitmapDescriptor.defaultMarkerWithHue(
+                      BitmapDescriptor.hueRed,
                     ),
                   ),
-                );
-                mapController.animateCamera(
-                  CameraUpdate.newLatLng(
-                    LatLng(
-                      37.42796133580664,
-                      -122.085749655962,
+                  Marker(
+                    markerId: const MarkerId('marker_2'),
+                    draggable: false,
+                    position: LatLng(
+                      widget.pickuplatlong.latitude,
+                      widget.pickuplatlong.longitude,
                     ),
+                    infoWindow: const InfoWindow(
+                        title: 'Marker Title', snippet: 'Marker Snippet'),
+                    icon: BitmapDescriptor.defaultMarkerWithHue(
+                        BitmapDescriptor.hueRed),
                   ),
-                );
-
-                // setState(() {
-                //   ismapCreated = true;
-                // });
-              },
-              initialCameraPosition: CameraPosition(
-                target: LatLng(
-                  37.42796133580664,
-                  -122.085749655962,
-                ),
-                zoom: 15.0,
-              ),
-            ),
-            Container(
-              height: 40.h,
-              width: 40.w,
-              margin: EdgeInsets.only(
-                top: 10.h,
-                left: 8.w,
-              ),
-              child: Center(
-                child: Icon(
-                  Icons.arrow_back,
-                  color: Colors.black,
+                },
+                gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                  Factory<OneSequenceGestureRecognizer>(
+                    () => EagerGestureRecognizer(),
+                  ),
+                },
+                onMapCreated: (controller) {
+                  controller.animateCamera(
+                    CameraUpdate.newLatLngZoom(
+                      LatLng(
+                        widget.pickuplatlong.latitude,
+                        widget.pickuplatlong.longitude,
+                      ),
+                      15,
+                    ),
+                  );
+                },
+                initialCameraPosition: CameraPosition(
+                  target: LatLng(
+                    widget.pickuplatlong.latitude,
+                    widget.pickuplatlong.longitude,
+                  ),
+                  zoom: 15.0,
                 ),
               ),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white,
+              Container(
+                height: 40.h,
+                width: 40.w,
+                margin: EdgeInsets.only(
+                  top: 10.h,
+                  left: 8.w,
+                ),
+                child: Center(
+                  child: Icon(
+                    Icons.arrow_back,
+                    color: AppColors.black,
+                  ),
+                ),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white,
+                ),
               ),
-            ),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: Container(
-                height: 400.h,
-                color: Colors.white,
-                child: ListView.separated(
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Container(
+                  height: 300.h,
+                  width: double.infinity,
+                  color: Colors.white,
                   padding: EdgeInsets.only(
-                    top: 20.h,
+                    top: 10.h,
                     left: 16.w,
+                    bottom: 10.h,
                     right: 16.w,
-                    bottom: 20.h,
                   ),
-                  shrinkWrap: true,
-                  primary: false,
-                  itemBuilder: (context, index) {
-                    return Row(
-                      children: [
-                        AppImage(
-                          "assets/driver.svg",
-                          height: 50.h,
-                          width: 50.w,
-                        ),
-                        sizedBoxWithWidth(15),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              neardrivers.elementAt(index).name,
-                              style: AppText.text14w400.copyWith(
-                                color: Colors.black,
-                                fontSize: 14.sp,
-                              ),
-                            ),
-                            RatingBar.builder(
-                              initialRating:
-                                  neardrivers.elementAt(index).rating,
-                              minRating: 1,
-                              direction: Axis.horizontal,
-                              ignoreGestures: true,
-                              allowHalfRating: true,
-                              unratedColor: Colors.grey,
-                              itemCount: 5,
-                              itemSize: 15,
-                              itemPadding: EdgeInsets.symmetric(horizontal: .0),
-                              itemBuilder: (context, _) => Icon(
-                                Icons.star,
-                                color: Colors.amber,
-                                size: 10,
-                              ),
-                              onRatingUpdate: (rating) {
-                                print(rating);
-                              },
-                            ),
-                            sizedBoxWithHeight(2),
-                            Text(
-                              "4:05pm, 3 min away",
-                              style: AppText.text14w400.copyWith(
-                                color: Colors.black,
-                                fontSize: 11.sp,
-                              ),
-                            ),
-                            sizedBoxWithHeight(4),
-                          ],
-                        ),
-                        Spacer(),
-                        Text(
-                          "\$ ${neardrivers.elementAt(index).price}",
-                          style: AppText.text14w400.copyWith(
-                            fontSize: 14.sp,
-                            color: Colors.black,
-                            fontWeight: FontWeight.w600,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.greylight,
+                          borderRadius: BorderRadius.circular(
+                            20,
                           ),
                         ),
-                        sizedBoxWithWidth(10),
-                        Icon(
-                          Icons.arrow_forward_ios_sharp,
-                          color: Colors.black,
-                          size: 15,
-                        )
-                      ],
-                    );
-                  },
-                  separatorBuilder: (context, index) {
-                    return Divider(
-                      thickness: 0.9,
-                      color: AppColors.greylight,
-                    );
-                  },
-                  itemCount: neardrivers.length,
+                        child: TextFormField(
+                          cursorColor: AppColors.grey500,
+                          controller: notecontroller,
+                          decoration: InputDecoration(
+                            hintText: "Any pickup notes?",
+                            hintStyle: GoogleFonts.poppins(
+                              color: AppColors.grey500,
+                              height:
+                                  1.4, //                                <----- this was the key
+
+                              fontSize: 13.sp,
+                              fontWeight: FontWeight.normal,
+                            ),
+                            contentPadding: EdgeInsets.only(
+                              left: 10.w,
+                              bottom: 4.h,
+                            ),
+                            border: InputBorder.none,
+                          ),
+                        ),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            "Total Amount ",
+                            style: GoogleFonts.poppins(
+                              color: AppColors.black,
+                              fontSize: 18.sp,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          Text(
+                            "${widget.amount}\$",
+                            style: GoogleFonts.poppins(
+                              color: AppColors.black,
+                              fontSize: 18.sp,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          )
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            )
-          ],
+              )
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: Container(
@@ -265,42 +246,54 @@ class _SelectRiderState extends State<SelectRider> {
                 children: [
                   Icon(
                     Icons.money_outlined,
-                    color: Colors.green.shade300,
+                    color: AppColors.green,
                     size: 40.h,
                   ),
                   sizedBoxWithWidth(10),
                   Text(
                     "Cash",
                     style: AppText.text15Normal.copyWith(
-                      color: Colors.black,
+                      color: AppColors.black,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                   Spacer(),
                   Icon(
                     Icons.arrow_forward_ios,
-                    color: Colors.black,
+                    color: AppColors.black,
                     size: 16.h,
                   )
                 ],
               ),
-              Container(
-                margin: EdgeInsets.only(
-                  top: 10.h,
-                ),
-                padding: EdgeInsets.symmetric(
-                  vertical: 15.h,
-                ),
-                child: Center(
-                  child: Text(
-                    "Confirm ride",
-                    style: AppText.text15Normal.copyWith(color: Colors.white),
+              InkWell(
+                onTap: () {
+                  bookrideBloc.add(
+                    DoBookRide(
+                      bookingid: widget.bookingid,
+                      notes: notecontroller.text,
+                      payment_mode: "cash",
+                      vehicleid: widget.vehicleid,
+                    ),
+                  );
+                },
+                child: Container(
+                  margin: EdgeInsets.only(
+                    top: 10.h,
                   ),
-                ),
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: AppColors.green,
-                  borderRadius: BorderRadius.circular(10),
+                  padding: EdgeInsets.symmetric(
+                    vertical: 15.h,
+                  ),
+                  child: Center(
+                    child: Text(
+                      "Confirm ride",
+                      style: AppText.text15Normal.copyWith(color: Colors.white),
+                    ),
+                  ),
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: AppColors.green,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
               )
             ],

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/framework.dart';
-import 'package:flutter/src/widgets/placeholder.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:multitrip_user/shared/shared.dart';
 import 'package:multitrip_user/shared/ui/common/spacing.dart';
 import 'package:multitrip_user/themes/app_text.dart';
 
 class AccountChangePassword extends StatefulWidget {
-  const AccountChangePassword({super.key});
+  const AccountChangePassword({
+    super.key,
+  });
 
   @override
   State<AccountChangePassword> createState() => _AccountChangePasswordState();
@@ -22,57 +22,69 @@ class _AccountChangePasswordState extends State<AccountChangePassword> {
       backgroundColor: AppColors.appColor,
       appBar: AppBar(
         centerTitle: true,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         leadingWidth: 40.w,
         leading: InkWell(
           onTap: () {
-            AppEnvironment.navigator.pop();
+            Navigator.pop(context);
           },
           child: Icon(
             Icons.arrow_back,
-            color: Colors.black,
+            color: AppColors.black,
           ),
         ),
       ),
       body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 10.h),
+        padding: EdgeInsets.symmetric(
+          horizontal: 16.w,
+          vertical: 10.h,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Account",
+              Strings.account,
               style: GoogleFonts.poppins(
-                color: Colors.black,
+                color: AppColors.black,
                 fontSize: 18.sp,
                 fontWeight: FontWeight.w500,
               ),
             ),
-            sizedBoxWithHeight(40),
+            sizedBoxWithHeight(
+              40,
+            ),
             Text(
-              "New Password",
+              Strings.newpassword,
               style: GoogleFonts.poppins(
-                color: Colors.black,
+                color: AppColors.black,
                 fontSize: 18.sp,
                 fontWeight: FontWeight.w400,
               ),
             ),
-            sizedBoxWithHeight(10),
+            sizedBoxWithHeight(
+              10,
+            ),
             Text(
-              "Your passwords must be at least 8 characters long, and contain atleast one letter and one digit",
+              Strings.passwordtext,
               style: GoogleFonts.poppins(
-                  color: Colors.black,
+                  color: AppColors.black,
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w300),
             ),
-            sizedBoxWithHeight(15),
+            sizedBoxWithHeight(
+              15,
+            ),
             Text(
-              "New password",
+              Strings.newpassword,
               style: AppText.text15Normal.copyWith(
-                color: Colors.black,
+                color: AppColors.black,
                 fontSize: 14.sp,
               ),
             ),
-            sizedBoxWithHeight(5),
+            sizedBoxWithHeight(
+              5,
+            ),
             Container(
               color: Colors.grey.shade300,
               child: TextFormField(
@@ -80,34 +92,36 @@ class _AccountChangePasswordState extends State<AccountChangePassword> {
                 cursorColor: AppColors.grey500,
                 obscureText: ispasswordvisible ? false : true,
                 decoration: InputDecoration(
-                    suffixIcon: InkWell(
-                        onTap: () {
-                          setState(() {
-                            ispasswordvisible = !ispasswordvisible;
-                          });
-                        },
-                        child: Icon(
-                          ispasswordvisible
-                              ? Icons.remove_red_eye
-                              : Icons.visibility_off_rounded,
-                          color: Colors.black,
-                        )),
-                    isDense: true,
-                    // fillColor: Colors.grey.shade300,
-                    // filled: true,
-
-                    border: InputBorder.none),
+                  suffixIcon: InkWell(
+                      onTap: () {
+                        setState(() {
+                          ispasswordvisible = !ispasswordvisible;
+                        });
+                      },
+                      child: Icon(
+                        ispasswordvisible
+                            ? Icons.remove_red_eye
+                            : Icons.visibility_off_rounded,
+                        color: AppColors.black,
+                      )),
+                  isDense: true,
+                  border: InputBorder.none,
+                ),
               ),
             ),
-            sizedBoxWithHeight(15),
+            sizedBoxWithHeight(
+              15,
+            ),
             Text(
-              "Confirm new password",
+              Strings.confirmpassword,
               style: AppText.text15Normal.copyWith(
-                color: Colors.black,
+                color: AppColors.black,
                 fontSize: 14.sp,
               ),
             ),
-            sizedBoxWithHeight(5),
+            sizedBoxWithHeight(
+              5,
+            ),
             Container(
               color: Colors.grey.shade300,
               child: TextFormField(
@@ -115,23 +129,21 @@ class _AccountChangePasswordState extends State<AccountChangePassword> {
                 keyboardType: TextInputType.visiblePassword,
                 cursorColor: AppColors.grey500,
                 decoration: InputDecoration(
-                    suffixIcon: InkWell(
-                        onTap: () {
-                          setState(() {
-                            isconfirmvisible = !isconfirmvisible;
-                          });
-                        },
-                        child: Icon(
-                          isconfirmvisible
-                              ? Icons.remove_red_eye
-                              : Icons.visibility_off_rounded,
-                          color: Colors.black,
-                        )),
-                    isDense: true,
-                    border: InputBorder.none
-                    // fillColor: Colors.grey.shade300,
-                    // filled: true,
-                    ),
+                  suffixIcon: InkWell(
+                      onTap: () {
+                        setState(() {
+                          isconfirmvisible = !isconfirmvisible;
+                        });
+                      },
+                      child: Icon(
+                        isconfirmvisible
+                            ? Icons.remove_red_eye
+                            : Icons.visibility_off_rounded,
+                        color: AppColors.black,
+                      )),
+                  isDense: true,
+                  border: InputBorder.none,
+                ),
               ),
             ),
             Spacer(),
@@ -143,7 +155,7 @@ class _AccountChangePasswordState extends State<AccountChangePassword> {
               ),
               child: Center(
                 child: Text(
-                  "Update",
+                  Strings.update,
                   style: AppText.text15w500.copyWith(
                     color: Colors.white,
                   ),
@@ -153,7 +165,7 @@ class _AccountChangePasswordState extends State<AccountChangePassword> {
                 vertical: 16.h,
               ),
               decoration: BoxDecoration(
-                color: Colors.green,
+                color: AppColors.green,
                 borderRadius: BorderRadius.circular(
                   10.r,
                 ),

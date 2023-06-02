@@ -13,4 +13,6 @@ class AppColors {
   static Color get mobilegrey => const Color(0xffdadbda);
   static Color get greydark => const Color(0xffc2c1c0);
   static Color get colorgrey => const Color(0xff969696);
+  static Color get black => Colors.black;
+  static Color get colorRed => Color(0xffcc0b14);
 }

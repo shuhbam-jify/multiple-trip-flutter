@@ -1,11 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/framework.dart';
-import 'package:flutter/src/widgets/placeholder.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:multitrip_user/app_enverionment.dart';
+import 'package:multitrip_user/features/book_ride/under_the_ride.dart';
 import 'package:multitrip_user/shared/shared.dart';
 import 'package:multitrip_user/shared/ui/common/app_image.dart';
 import 'package:multitrip_user/shared/ui/common/spacing.dart';
@@ -13,14 +13,25 @@ import 'package:multitrip_user/shared/ui/common/spacing.dart';
 import '../../themes/app_text.dart';
 
 class BookingOTP extends StatefulWidget {
-  const BookingOTP({super.key});
+  final LatLng pickuplatlong;
+  final LatLng droplatlong;
+  final Set<Polyline> polylines;
+  const BookingOTP({
+    required this.polylines,
+    required this.droplatlong,
+    required this.pickuplatlong,
+    super.key,
+  });
 
   @override
   State<BookingOTP> createState() => _BookingOTPState();
 }
 
 class _BookingOTPState extends State<BookingOTP> {
-  late GoogleMapController mapController;
+  @override
+  void dispose() {
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,18 +40,31 @@ class _BookingOTPState extends State<BookingOTP> {
         child: Stack(
           children: [
             GoogleMap(
+              polylines: widget.polylines,
               zoomGesturesEnabled: true,
               zoomControlsEnabled: false,
               markers: <Marker>{
                 Marker(
                   markerId: const MarkerId('marker_1'),
-                  draggable: true,
-                  onDrag: (values) {
-                    //    value.ondrag(values);
-                  },
+                  draggable: false,
                   position: LatLng(
-                    37.42796133580664,
-                    -122.085749655962,
+                    widget.droplatlong.latitude,
+                    widget.droplatlong.longitude,
+                  ),
+                  infoWindow: const InfoWindow(
+                    title: 'Marker Title',
+                    snippet: 'Marker Snippet',
+                  ),
+                  icon: BitmapDescriptor.defaultMarkerWithHue(
+                    BitmapDescriptor.hueRed,
+                  ),
+                ),
+                Marker(
+                  markerId: const MarkerId('marker_2'),
+                  draggable: false,
+                  position: LatLng(
+                    widget.pickuplatlong.latitude,
+                    widget.pickuplatlong.longitude,
                   ),
                   infoWindow: const InfoWindow(
                       title: 'Marker Title', snippet: 'Marker Snippet'),
@@ -54,33 +78,20 @@ class _BookingOTPState extends State<BookingOTP> {
                 ),
               },
               onMapCreated: (controller) {
-                mapController = controller;
-
-                mapController.moveCamera(
-                  CameraUpdate.newLatLng(
+                controller.animateCamera(
+                  CameraUpdate.newLatLngZoom(
                     LatLng(
-                      37.42796133580664,
-                      -122.085749655962,
+                      widget.pickuplatlong.latitude,
+                      widget.pickuplatlong.longitude,
                     ),
+                    15,
                   ),
                 );
-                mapController.animateCamera(
-                  CameraUpdate.newLatLng(
-                    LatLng(
-                      37.42796133580664,
-                      -122.085749655962,
-                    ),
-                  ),
-                );
-
-                // setState(() {
-                //   ismapCreated = true;
-                // });
               },
               initialCameraPosition: CameraPosition(
                 target: LatLng(
-                  37.42796133580664,
-                  -122.085749655962,
+                  widget.pickuplatlong.latitude,
+                  widget.pickuplatlong.longitude,
                 ),
                 zoom: 15.0,
               ),
@@ -88,7 +99,7 @@ class _BookingOTPState extends State<BookingOTP> {
             Align(
               alignment: Alignment.bottomCenter,
               child: Container(
-                height: 500.h,
+                height: 300.h,
                 width: double.infinity,
                 padding: EdgeInsets.symmetric(
                   horizontal: 16.w,
@@ -104,7 +115,7 @@ class _BookingOTPState extends State<BookingOTP> {
                           style: GoogleFonts.poppins(
                             fontSize: 15.sp,
                             fontWeight: FontWeight.w400,
-                            color: Colors.black,
+                            color: AppColors.black,
                           ),
                         ),
                         Container(
@@ -135,10 +146,13 @@ class _BookingOTPState extends State<BookingOTP> {
                         )
                       ],
                     ),
+                    sizedBoxWithHeight(
+                      20,
+                    ),
                     Row(
                       children: [
                         AppImage(
-                          "assets/driver.svg",
+                          Images.driver,
                           height: 50.h,
                           width: 50.w,
                         ),
@@ -149,7 +163,7 @@ class _BookingOTPState extends State<BookingOTP> {
                             Text(
                               "Sam",
                               style: AppText.text14w400.copyWith(
-                                color: Colors.black,
+                                color: AppColors.black,
                                 fontSize: 14.sp,
                               ),
                             ),
@@ -162,7 +176,9 @@ class _BookingOTPState extends State<BookingOTP> {
                               unratedColor: Colors.grey,
                               itemCount: 5,
                               itemSize: 15,
-                              itemPadding: EdgeInsets.symmetric(horizontal: .0),
+                              itemPadding: EdgeInsets.symmetric(
+                                horizontal: .0,
+                              ),
                               itemBuilder: (context, _) => Icon(
                                 Icons.star,
                                 color: Colors.amber,
@@ -176,45 +192,75 @@ class _BookingOTPState extends State<BookingOTP> {
                           ],
                         ),
                         Spacer(),
-                        Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            gradient: LinearGradient(
-                              colors: [
-                                AppColors.green,
-                                AppColors.yellow,
-                              ],
+                        // Container(
+                        //   decoration: BoxDecoration(
+                        //     borderRadius: BorderRadius.circular(
+                        //       20,
+                        //     ),
+                        //     gradient: LinearGradient(
+                        //       colors: [
+                        //         AppColors.green,
+                        //         AppColors.yellow,
+                        //       ],
+                        //     ),
+                        //   ),
+                        //   padding: EdgeInsets.symmetric(
+                        //     vertical: 8.h,
+                        //     horizontal: 15.w,
+                        //   ),
+                        //   child: Row(
+                        //     mainAxisSize: MainAxisSize.min,
+                        //     children: [
+                        //       Icon(
+                        //         Icons.dialpad_rounded,
+                        //         size: 18,
+                        //         color: Colors.white,
+                        //       ),
+                        //       Text(
+                        //         " OTP",
+                        //         style: GoogleFonts.poppins(
+                        //           color: Colors.white,
+                        //           fontSize: 14.sp,
+                        //           fontWeight: FontWeight.w500,
+                        //         ),
+                        //       ),
+                        //       Text(
+                        //         "   1199",
+                        //         style: GoogleFonts.poppins(
+                        //           color: Colors.white,
+                        //           fontSize: 14.sp,
+                        //           fontWeight: FontWeight.w500,
+                        //         ),
+                        //       )
+                        //     ],
+                        //   ),
+                        // ),
+                        InkWell(
+                          onTap: () {
+                            AppEnvironment.navigator.push(
+                              MaterialPageRoute(
+                                builder: (context) => UnderTheRide(
+                                  droplatlong: widget.droplatlong,
+                                  pickuplatlong: widget.pickuplatlong,
+                                  polylines: widget.polylines,
+                                ),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            margin: EdgeInsets.only(
+                              left: 10.w,
                             ),
-                          ),
-                          padding: EdgeInsets.symmetric(
-                            vertical: 5.h,
-                            horizontal: 12.w,
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.dialpad_rounded,
-                                size: 18,
-                                color: Colors.white,
-                              ),
-                              Text(
-                                " OTP",
-                                style: GoogleFonts.poppins(
-                                  color: Colors.white,
-                                  fontSize: 14.sp,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              Text(
-                                "   1199",
-                                style: GoogleFonts.poppins(
-                                  color: Colors.white,
-                                  fontSize: 14.sp,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              )
-                            ],
+                            child: Icon(
+                              Icons.phone_in_talk_sharp,
+                              color: AppColors.black,
+                              size: 20,
+                            ),
+                            padding: EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: AppColors.greylight,
+                              shape: BoxShape.circle,
+                            ),
                           ),
                         )
                       ],

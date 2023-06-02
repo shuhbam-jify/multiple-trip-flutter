@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:multitrip_user/shared/shared.dart';
 import 'package:multitrip_user/themes/app_text.dart';
 
@@ -56,15 +55,19 @@ extension BuildContextExtension on BuildContext {
       ),
       behavior: SnackBarBehavior.floating,
     );
-    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(
+      snackBar,
+    );
   }
 }
 
-extension HexColor on Color {
-  /// Prefixes a hash sign if [leadingHashSign] is set to `true` (default is `true`).
-  String toHex({bool leadingHashSign = true}) => '${leadingHashSign ? '#' : ''}'
-      '${alpha.toRadixString(16).padLeft(2, '0')}'
-      '${red.toRadixString(16).padLeft(2, '0')}'
-      '${green.toRadixString(16).padLeft(2, '0')}'
-      '${blue.toRadixString(16).padLeft(2, '0')}';
-}
+// extension HexColor on Color {
+//   /// Prefixes a hash sign if [leadingHashSign] is set to `true` (default is `true`).
+//   String toHex({bool leadingHashSign = true}) => '${leadingHashSign ? '#' : ''}'
+//       '${alpha.toRadixString(16).padLeft(2, '0')}'
+//       '${red.toRadixString(16).padLeft(2, '0')}'
+//       '${green.toRadixString(16).padLeft(2, '0')}'
+//       '${blue.toRadixString(16).padLeft(2, '0')}';
+// }

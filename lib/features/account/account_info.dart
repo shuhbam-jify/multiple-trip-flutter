@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/framework.dart';
-import 'package:flutter/src/widgets/placeholder.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:multitrip_user/routes/routes.dart';
+import 'package:multitrip_user/app_enverionment.dart';
+import 'package:multitrip_user/features/account/account_change_password.dart';
+import 'package:multitrip_user/features/account/account_email.dart';
+import 'package:multitrip_user/features/account/account_name.dart';
+import 'package:multitrip_user/features/account/account_phone.dart';
 import 'package:multitrip_user/shared/shared.dart';
 import 'package:multitrip_user/shared/ui/common/spacing.dart';
 import 'package:multitrip_user/themes/app_text.dart';
@@ -27,7 +29,7 @@ class _AccountInfoState extends State<AccountInfo> {
                 child: Text(
                   text,
                   style: GoogleFonts.poppins(
-                    color: Colors.black,
+                    color: AppColors.black,
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w400,
                   ),
@@ -49,6 +51,7 @@ class _AccountInfoState extends State<AccountInfo> {
         backgroundColor: AppColors.appColor,
         appBar: AppBar(
           centerTitle: true,
+          backgroundColor: Colors.transparent,
           bottom: PreferredSize(
             preferredSize: Size.fromHeight(80.h),
             child: Padding(
@@ -60,9 +63,9 @@ class _AccountInfoState extends State<AccountInfo> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Account",
+                    Strings.account,
                     style: GoogleFonts.poppins(
-                      color: Colors.black,
+                      color: AppColors.black,
                       fontSize: 18.sp,
                       fontWeight: FontWeight.w500,
                     ),
@@ -81,7 +84,7 @@ class _AccountInfoState extends State<AccountInfo> {
                       padding: EdgeInsets.only(right: 100.w),
                       indicatorColor: AppColors.green,
                       // indicator: BoxDecoration(
-                      //   color: Colors.greenAccent,
+                      //   color: AppColors.greenAccent,
                       // ),
 
                       indicatorWeight: 6.sp,
@@ -99,7 +102,7 @@ class _AccountInfoState extends State<AccountInfo> {
                           margin: EdgeInsets.only(
                             bottom: 0.h,
                           ),
-                          child: _createTab("Account Info"),
+                          child: _createTab(Strings.accountinfo),
                         ),
                         Container(
                             color: selectedtab == 1
@@ -108,7 +111,7 @@ class _AccountInfoState extends State<AccountInfo> {
                             margin: EdgeInsets.only(
                               bottom: 0.h,
                             ),
-                            child: _createTab("Security")),
+                            child: _createTab(Strings.security)),
                       ],
                     ),
                   ),
@@ -120,11 +123,11 @@ class _AccountInfoState extends State<AccountInfo> {
           leadingWidth: 40.w,
           leading: InkWell(
             onTap: () {
-              AppEnvironment.navigator.pop();
+              Navigator.pop(context);
             },
             child: Icon(
               Icons.arrow_back,
-              color: Colors.black,
+              color: AppColors.black,
             ),
           ),
         ),
@@ -136,9 +139,9 @@ class _AccountInfoState extends State<AccountInfo> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Account Info",
+                    Strings.accountinfo,
                     style: GoogleFonts.poppins(
-                      color: Colors.black,
+                      color: AppColors.black,
                       fontSize: 24.sp,
                       fontWeight: FontWeight.w500,
                     ),
@@ -163,20 +166,20 @@ class _AccountInfoState extends State<AccountInfo> {
                                       children: [
                                         InkWell(
                                           onTap: () {
-                                            AppEnvironment.navigator.pop();
+                                            Navigator.pop(context);
                                           },
                                           child: Icon(
                                             Icons.close,
-                                            color: Colors.black,
+                                            color: AppColors.black,
                                           ),
                                         )
                                       ],
                                     ),
                                     Center(
                                       child: Text(
-                                        "Profile Photo",
+                                        Strings.profilephoto,
                                         style: GoogleFonts.poppins(
-                                          color: Colors.black,
+                                          color: AppColors.black,
                                           fontSize: 18.sp,
                                           fontWeight: FontWeight.w300,
                                         ),
@@ -187,9 +190,9 @@ class _AccountInfoState extends State<AccountInfo> {
                                       color: AppColors.greydark,
                                     ),
                                     Text(
-                                      "Your profile photo is visible to everyone",
+                                      Strings.profiledesc,
                                       style: GoogleFonts.poppins(
-                                        color: Colors.black,
+                                        color: AppColors.black,
                                         fontSize: 13.sp,
                                         fontWeight: FontWeight.w300,
                                       ),
@@ -202,7 +205,7 @@ class _AccountInfoState extends State<AccountInfo> {
                                       ),
                                       child: Center(
                                         child: Text(
-                                          "Update",
+                                          Strings.update,
                                           style: AppText.text15w500.copyWith(
                                             color: Colors.white,
                                           ),
@@ -218,9 +221,10 @@ class _AccountInfoState extends State<AccountInfo> {
                                         ),
                                       ),
                                     ),
+                                    sizedBoxWithHeight(15),
                                     InkWell(
                                       onTap: () {
-                                        AppEnvironment.navigator.pop();
+                                        Navigator.pop(context);
                                       },
                                       child: Container(
                                         width: double.infinity,
@@ -229,9 +233,9 @@ class _AccountInfoState extends State<AccountInfo> {
                                         ),
                                         child: Center(
                                           child: Text(
-                                            "Cancel",
+                                            Strings.cancel,
                                             style: AppText.text15w500.copyWith(
-                                              color: Colors.black,
+                                              color: AppColors.black,
                                             ),
                                           ),
                                         ),
@@ -288,7 +292,7 @@ class _AccountInfoState extends State<AccountInfo> {
                             child: Icon(
                               Icons.edit,
                               size: 14,
-                              color: Colors.black,
+                              color: AppColors.black,
                             ),
                           ),
                         )
@@ -297,9 +301,9 @@ class _AccountInfoState extends State<AccountInfo> {
                   ),
                   sizedBoxWithHeight(15),
                   Text(
-                    "Basic Info",
+                    Strings.basicinfo,
                     style: GoogleFonts.poppins(
-                      color: Colors.black,
+                      color: AppColors.black,
                       fontSize: 16.sp,
                       fontWeight: FontWeight.w500,
                     ),
@@ -307,16 +311,19 @@ class _AccountInfoState extends State<AccountInfo> {
                   sizedBoxWithHeight(20),
                   InkWell(
                     onTap: () {
-                      AppEnvironment.navigator
-                          .pushNamed(GeneralRoutes.accounname);
+                      AppEnvironment.navigator.push(
+                        MaterialPageRoute(
+                          builder: (context) => AccountName(),
+                        ),
+                      );
                     },
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Name",
+                          Strings.name,
                           style: GoogleFonts.poppins(
-                            color: Colors.black,
+                            color: AppColors.black,
                             fontSize: 14.sp,
                             fontWeight: FontWeight.w400,
                           ),
@@ -339,8 +346,11 @@ class _AccountInfoState extends State<AccountInfo> {
                   ),
                   InkWell(
                     onTap: () {
-                      AppEnvironment.navigator
-                          .pushNamed(GeneralRoutes.accounphone);
+                      AppEnvironment.navigator.push(
+                        MaterialPageRoute(
+                          builder: (context) => AccountPhone(),
+                        ),
+                      );
                     },
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -348,7 +358,7 @@ class _AccountInfoState extends State<AccountInfo> {
                         Text(
                           "Phone number",
                           style: GoogleFonts.poppins(
-                            color: Colors.black,
+                            color: AppColors.black,
                             fontSize: 14.sp,
                             fontWeight: FontWeight.w400,
                           ),
@@ -366,7 +376,7 @@ class _AccountInfoState extends State<AccountInfo> {
                             ),
                             Icon(
                               Icons.check_circle,
-                              color: Colors.green,
+                              color: AppColors.green,
                               size: 14,
                             )
                           ],
@@ -380,8 +390,11 @@ class _AccountInfoState extends State<AccountInfo> {
                   ),
                   InkWell(
                     onTap: () {
-                      AppEnvironment.navigator
-                          .pushNamed(GeneralRoutes.accounemail);
+                      AppEnvironment.navigator.push(
+                        MaterialPageRoute(
+                          builder: (context) => AccountEmail(),
+                        ),
+                      );
                     },
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -389,7 +402,7 @@ class _AccountInfoState extends State<AccountInfo> {
                         Text(
                           "Email",
                           style: GoogleFonts.poppins(
-                            color: Colors.black,
+                            color: AppColors.black,
                             fontSize: 14.sp,
                             fontWeight: FontWeight.w400,
                           ),
@@ -407,7 +420,7 @@ class _AccountInfoState extends State<AccountInfo> {
                             ),
                             Icon(
                               Icons.check_circle,
-                              color: Colors.green,
+                              color: AppColors.green,
                               size: 14,
                             )
                           ],
@@ -427,7 +440,7 @@ class _AccountInfoState extends State<AccountInfo> {
                   Text(
                     "Security",
                     style: GoogleFonts.poppins(
-                      color: Colors.black,
+                      color: AppColors.black,
                       fontSize: 20.sp,
                       fontWeight: FontWeight.w500,
                     ),
@@ -436,7 +449,7 @@ class _AccountInfoState extends State<AccountInfo> {
                   Text(
                     "Logging in",
                     style: GoogleFonts.poppins(
-                      color: Colors.black,
+                      color: AppColors.black,
                       fontSize: 16.sp,
                       fontWeight: FontWeight.w400,
                     ),
@@ -444,8 +457,11 @@ class _AccountInfoState extends State<AccountInfo> {
                   sizedBoxWithHeight(20),
                   InkWell(
                     onTap: () {
-                      AppEnvironment.navigator
-                          .pushNamed(GeneralRoutes.accounchangepassword);
+                      AppEnvironment.navigator.push(
+                        MaterialPageRoute(
+                          builder: (context) => AccountChangePassword(),
+                        ),
+                      );
                     },
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -453,7 +469,7 @@ class _AccountInfoState extends State<AccountInfo> {
                         Text(
                           "Password",
                           style: GoogleFonts.poppins(
-                            color: Colors.black,
+                            color: AppColors.black,
                             fontSize: 14.sp,
                             fontWeight: FontWeight.w400,
                           ),
@@ -462,7 +478,7 @@ class _AccountInfoState extends State<AccountInfo> {
                         Text(
                           "*******",
                           style: GoogleFonts.poppins(
-                            color: Colors.black,
+                            color: AppColors.black,
                             fontSize: 14.sp,
                             fontWeight: FontWeight.w400,
                           ),
