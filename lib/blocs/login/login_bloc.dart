@@ -1,7 +1,4 @@
-import 'dart:io';
-
 import 'package:bloc/bloc.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:meta/meta.dart';
 import 'package:multitrip_user/api/app_repository.dart';
 import 'package:multitrip_user/models/login.dart';

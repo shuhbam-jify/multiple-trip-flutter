@@ -26,6 +26,13 @@ class MemberBloc extends Bloc<MemberEvent, MemberState> {
             )!,
           )
               .then((value) {
+            if (value['code'] == null) {
+              emit.call(
+                MembersFail(
+                  error: 'Unable to load the member list.Please try again',
+                ),
+              );
+            }
             if (value["code"] == 200) {
               var listMembers = ListMembers.fromJson(
                 value,

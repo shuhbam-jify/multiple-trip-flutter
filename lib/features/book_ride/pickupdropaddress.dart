@@ -10,17 +10,18 @@ import 'package:flutter_overlay_loader/flutter_overlay_loader.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:multitrip_user/blocs/address/address_bloc.dart' as address;
 import 'package:multitrip_user/blocs/confirmride/confirmride_bloc.dart';
 import 'package:multitrip_user/blocs/member/member_bloc.dart';
-import 'package:multitrip_user/bottomnavigationbar.dart';
+import 'package:multitrip_user/blocs/token/token_bloc.dart';
 import 'package:multitrip_user/features/book_ride/vehiclelist.dart';
-import 'package:multitrip_user/logic/add_member/member_controller.dart';
 import 'package:multitrip_user/features/book_ride/widgets/membersSheet.dart';
+import 'package:multitrip_user/models/address.dart';
 import 'package:multitrip_user/shared/shared.dart';
 import 'package:multitrip_user/shared/ui/common/app_image.dart';
+
 import 'package:multitrip_user/shared/ui/common/spacing.dart';
 import 'package:multitrip_user/themes/app_text.dart';
-import 'package:provider/provider.dart';
 import 'package:top_modal_sheet/top_modal_sheet.dart';
 
 import '../../blocs/locationbloc/location_bloc_bloc.dart';
@@ -29,11 +30,12 @@ class PickupDropAddress extends StatefulWidget {
   final String pickupaddess;
   final double lat;
   final double long;
-  const PickupDropAddress(
-      {super.key,
-      required this.pickupaddess,
-      required this.lat,
-      required this.long});
+  const PickupDropAddress({
+    super.key,
+    required this.pickupaddess,
+    required this.lat,
+    required this.long,
+  });
 
   @override
   State<PickupDropAddress> createState() => _PickupDropAddressState();
@@ -41,7 +43,7 @@ class PickupDropAddress extends StatefulWidget {
 
 class _PickupDropAddressState extends State<PickupDropAddress> {
   late GoogleMapController googleMapController;
-  List<TextEditingController> _controllers = [];
+  final _controller = TextEditingController();
   Position? position;
   double dividerHeight = 50.h;
   bool pickenabled = true;
@@ -50,6 +52,8 @@ class _PickupDropAddressState extends State<PickupDropAddress> {
   int currentTextField = 0;
   bool ismapvisible = false;
 
+  final isExtraTextfieldVisible = ValueNotifier(false);
+
   TextEditingController pickupController = TextEditingController();
   TextEditingController dropController = TextEditingController();
   LocationBlocBloc locationBlocBloc = LocationBlocBloc();
@@ -57,6 +61,7 @@ class _PickupDropAddressState extends State<PickupDropAddress> {
 
   late LatLng pickuplatlong;
   late LatLng droplatlong;
+  final textFields = <Widget>[];
 
   @override
   void initState() {
@@ -66,33 +71,146 @@ class _PickupDropAddressState extends State<PickupDropAddress> {
     locationBlocBloc = BlocProvider.of<LocationBlocBloc>(context);
     memberBloc = BlocProvider.of<MemberBloc>(context);
     super.initState();
+    _addTextFields();
+    BlocProvider.of<address.AddressBloc>(context).add(address.FetchAddress());
   }
 
   Future<void> fetchlocation() async {
     position = await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.low,
+      desiredAccuracy: LocationAccuracy.medium,
     );
   }
 
   @override
   void dispose() {
-    for (var controller in _controllers) {
-      controller.dispose();
-    }
+    _controller.dispose();
 
     super.dispose();
   }
 
-  void _addTextField() {
-    setState(() {
-      if (_controllers.length < 3) {
-        setState(() {
-          _controllers.add(TextEditingController());
-          // Increase the divider height when adding a new TextField
-          dividerHeight += 50.h;
-        });
-      }
-    });
+  void _addTextFields() {
+    textFields.addAll(
+      [
+        ValueListenableBuilder(
+            key: ValueKey('text_1'),
+            valueListenable: isExtraTextfieldVisible,
+            builder: (_, bool val, __) {
+              return Visibility(
+                visible: val,
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 10, top: 10),
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Container(
+                          color: Colors.grey.shade300,
+                          child: TextFormField(
+                            controller: _controller,
+                            onTap: () {},
+                            onChanged: (value) {
+                              BlocProvider.of<LocationBlocBloc>(context).add(
+                                FetchSuggestions(query: value),
+                              );
+                            },
+                            cursorColor: AppColors.grey500,
+                            decoration: InputDecoration(
+                              isDense: true,
+                              hintText: "Where to?",
+                              contentPadding:
+                                  EdgeInsets.symmetric(vertical: 15) +
+                                      EdgeInsets.only(
+                                        left: 10.w,
+                                      ),
+                              hintStyle: AppText.text14w400.copyWith(
+                                fontSize: 14.sp,
+                                color: AppColors.grey500,
+                              ),
+                              border: InputBorder.none,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: AppImage(
+                          "assets/sort.svg",
+                          height: 32.h,
+                          width: 48.w,
+                        ),
+                      ),
+                      sizedBoxWithWidth(5),
+                      InkWell(
+                        onTap: () {
+                          isExtraTextfieldVisible.value = false;
+                          setState(() {
+                            dividerHeight -= 50.h;
+                          });
+                        },
+                        child: SizedBox(
+                          height: 30.h,
+                          width: 30.w,
+                          child: Icon(
+                            Icons.close,
+                            color: AppColors.black,
+                          ),
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+              );
+            }),
+        Row(
+          key: ValueKey('text_2'),
+          children: [
+            Flexible(
+              child: Container(
+                color: Colors.grey.shade300,
+                child: TextFormField(
+                  controller: dropController,
+                  onTap: () {
+                    setState(() {
+                      pickenabled = false;
+                      dropenable = true;
+                    });
+                    if (pickupController.text == "") {
+                      setState(() {
+                        pickupController.text = widget.pickupaddess;
+                      });
+                    }
+
+                    locationBlocBloc.add(ClearSuggestionList());
+                    //  locationProvider.changepickupordrop(value: "Drop");
+                  },
+                  onChanged: (value) {
+                    BlocProvider.of<LocationBlocBloc>(context)
+                        .add(FetchSuggestions(query: value));
+                  },
+                  cursorColor: AppColors.grey500,
+                  decoration: InputDecoration(
+                    hintText: "Where to?",
+                    hintStyle: AppText.text14w400.copyWith(
+                      fontSize: 14.sp,
+                      color: AppColors.grey500,
+                    ),
+                    contentPadding: EdgeInsets.symmetric(vertical: 15) +
+                        EdgeInsets.only(
+                          left: 10.w,
+                        ),
+                    border: InputBorder.none,
+                  ),
+                ),
+              ),
+            ),
+            AppImage(
+              "assets/sort.svg",
+              height: 32.h,
+              width: 48.w,
+            ),
+          ],
+        ),
+      ],
+    );
   }
 
   @override
@@ -110,6 +228,7 @@ class _PickupDropAddressState extends State<PickupDropAddress> {
             ismapvisible = false;
           }
           return Scaffold(
+            resizeToAvoidBottomInset: false,
             bottomNavigationBar: Visibility(
               visible: ismapvisible,
               child: GestureDetector(
@@ -209,6 +328,9 @@ class _PickupDropAddressState extends State<PickupDropAddress> {
                         } else if (state is TokenExpired) {
                           Loader.hide();
                           context.showSnackBar(context, msg: "Token Expired");
+                          context
+                              .read<TokenBloc>()
+                              .add(FetchAccessToken(context: context));
                         }
                       },
                     ),
@@ -284,14 +406,6 @@ class _PickupDropAddressState extends State<PickupDropAddress> {
                           },
                           cursorColor: AppColors.grey500,
                           decoration: InputDecoration(
-                            suffixIcon: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: AppImage(
-                                "assets/sort.svg",
-                                height: 10.h,
-                                width: 10.w,
-                              ),
-                            ),
                             hintText: "Enter Pickup location",
                             hintStyle: AppText.text14w400.copyWith(
                               fontSize: 14.sp,
@@ -306,184 +420,67 @@ class _PickupDropAddressState extends State<PickupDropAddress> {
                         ),
                       ),
                     ),
-                    // sizedBoxWithWidth(5),
-                    // Container(
-                    //   height: 30.h,
-                    //   width: 30.w,
-                    // )
-                  ],
-                ),
-                sizedBoxWithHeight(10),
-                ListView.separated(
-                  separatorBuilder: (context, index) {
-                    return sizedBoxWithHeight(10);
-                  },
-                  shrinkWrap: true,
-                  itemCount: _controllers.length,
-                  itemBuilder: (context, index) {
-                    return Row(
-                      children: [
-                        Flexible(
-                          child: Container(
-                            color: Colors.grey.shade300,
-                            child: TextFormField(
-                              onTap: () {
-                                setState(() {
-                                  currentTextField = index;
-                                });
-                              },
-                              controller: _controllers[index],
-                              onChanged: (value) {
-                                BlocProvider.of<LocationBlocBloc>(context).add(
-                                  FetchSuggestions(query: value),
-                                );
-                              },
-                              cursorColor: AppColors.grey500,
-                              decoration: InputDecoration(
-                                suffixIcon: LongPressDraggable(
-                                  feedback: Material(
-                                    child: TextFormField(
-                                      controller: _controllers[index],
-                                      cursorColor: AppColors.grey500,
-                                      decoration: InputDecoration(
-                                        hintText: "Where to?",
-                                        hintStyle: AppText.text14w400.copyWith(
-                                          fontSize: 14.sp,
-                                          color: AppColors.grey500,
-                                        ),
-                                        border: InputBorder.none,
-                                      ),
-                                    ),
-                                  ),
-                                  key: ValueKey(index),
-                                  childWhenDragging: Container(),
-                                  child: Icon(
-                                    Icons.drag_handle,
-                                    color: Colors.black,
-                                    size: 40,
-                                  ),
-                                ),
-                                isDense: true,
-                                hintText: "Where to?",
-                                contentPadding:
-                                    EdgeInsets.symmetric(vertical: 15) +
-                                        EdgeInsets.only(
-                                          left: 10.w,
-                                        ),
-                                hintStyle: AppText.text14w400.copyWith(
-                                  fontSize: 14.sp,
-                                  color: AppColors.grey500,
-                                ),
-                                border: InputBorder.none,
-                              ),
-                            ),
-                          ),
-                        ),
-                        sizedBoxWithWidth(5),
-                        InkWell(
-                          onTap: () {
-                            setState(() {
-                              _controllers.removeAt(index);
-                              dividerHeight -= 50.h;
-                            });
-                          },
-                          child: SizedBox(
-                            height: 30.h,
-                            width: 30.w,
-                            child: Icon(
-                              Icons.close,
-                              color: AppColors.black,
-                            ),
-                          ),
-                        )
-                      ],
-                    );
-                  },
-                ),
-                sizedBoxWithHeight(10),
-                Row(
-                  children: [
-                    Flexible(
-                      child: Container(
-                        color: Colors.grey.shade300,
-                        child: TextFormField(
-                          controller: dropController,
-                          onTap: () {
-                            setState(() {
-                              pickenabled = false;
-                              dropenable = true;
-                            });
-                            if (pickupController.text == "") {
-                              setState(() {
-                                pickupController.text = widget.pickupaddess;
-                              });
-                            }
-
-                            locationBlocBloc.add(ClearSuggestionList());
-                            //  locationProvider.changepickupordrop(value: "Drop");
-                          },
-                          onChanged: (value) {
-                            BlocProvider.of<LocationBlocBloc>(context)
-                                .add(FetchSuggestions(query: value));
-                          },
-                          cursorColor: AppColors.grey500,
-                          decoration: InputDecoration(
-                            suffixIcon: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: AppImage(
-                                "assets/sort.svg",
-                                height: 10.h,
-                                width: 10.w,
-                              ),
-                            ),
-                            hintText: "Where to?",
-                            hintStyle: AppText.text14w400.copyWith(
-                              fontSize: 14.sp,
-                              color: AppColors.grey500,
-                            ),
-                            contentPadding: EdgeInsets.symmetric(vertical: 15) +
-                                EdgeInsets.only(
-                                  left: 10.w,
-                                ),
-                            border: InputBorder.none,
-                          ),
-                        ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: AppImage(
+                        "assets/sort.svg",
+                        height: 32.h,
+                        width: 48.w,
                       ),
                     ),
-                    // sizedBoxWithWidth(5),
-                    // Container(
-                    //   height: 30.h,
-                    //   width: 30.w,
-                    // )
                   ],
+                ),
+                sizedBoxWithHeight(10),
+                ReorderableListView(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: [
+                    ...textFields,
+                  ],
+                  onReorder: (oldIndex, newIndex) {
+                    setState(() {
+                      if (oldIndex < newIndex) {
+                        newIndex -= 1;
+                      }
+                      final item = textFields.removeAt(oldIndex);
+                      textFields.insert(newIndex, item);
+                    });
+                  },
                 ),
               ],
             ),
           ),
           sizedBoxWithWidth(7),
-          Visibility(
-            visible: _controllers.length < 1,
-            child: InkWell(
-              onTap: () {
-                _addTextField();
-              },
-              child: Container(
-                height: 30.h,
-                width: 30.w,
-                decoration: BoxDecoration(
-                    color: _controllers.length < 3
-                        ? AppColors.greylight
-                        : Colors.transparent,
-                    shape: BoxShape.circle),
-                child: Center(
-                  child: Icon(
-                    Icons.add,
-                    color: AppColors.black,
+          ValueListenableBuilder(
+            valueListenable: isExtraTextfieldVisible,
+            builder: (_, bool val, __) {
+              return Visibility(
+                visible: !val,
+                child: InkWell(
+                  onTap: () => setState(() {
+                    isExtraTextfieldVisible.value = true;
+                    dividerHeight += 50.h;
+                  }),
+                  child: Container(
+                    height: 30.h,
+                    width: 30.w,
+                    decoration: BoxDecoration(
+                      // color: _controllers.length < 3
+                      //     ? AppColors.greylight
+                      //     : Colors.transparent,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Icon(
+                        Icons.add,
+                        color: AppColors.black,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-          )
+              );
+            },
+          ),
         ],
       ),
     );
@@ -570,204 +567,381 @@ class _PickupDropAddressState extends State<PickupDropAddress> {
           ? SingleChildScrollView(
               child: Column(
                 children: [
+                  Divider(
+                    thickness: 1,
+                    color: AppColors.greydark,
+                  ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      Container(
-                        height: 50.h,
-                        width: 50.w,
-                        child: Icon(
-                          Icons.star,
-                          color: Colors.white,
-                          size: 30,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.greydark,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      sizedBoxWithWidth(10),
                       Flexible(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              "Saved Places",
-                              style: AppText.text16w400.copyWith(
-                                color: AppColors.black,
-                              ),
-                            ),
+                            BlocConsumer<address.AddressBloc,
+                                address.AddressState>(
+                              listener: (context, state) {
+                                Loader.show(context);
+                                if (state is address.AddressLoaded) {
+                                  Loader.hide();
+                                } else {
+                                  Loader.hide();
+                                }
+                              },
+                              builder: (context, state) {
+                                if (state is address.AddressLoaded) {
+                                  return ExpansionTile(
+                                    title: Text(
+                                      "Saved Places",
+                                      style: AppText.text16w400.copyWith(
+                                        color: AppColors.black,
+                                      ),
+                                    ),
+                                    children: List.generate(
+                                        state.address.address.length,
+                                        (index) => GestureDetector(
+                                              onTap: () {
+                                                FocusScopeNode currentFocus =
+                                                    FocusScope.of(context);
+
+                                                if (!currentFocus
+                                                    .hasPrimaryFocus) {
+                                                  currentFocus.unfocus();
+                                                }
+
+                                                if (pickenabled) {
+                                                  locationBlocBloc.add(
+                                                    FetchPickupLatLong(
+                                                        placeId: state
+                                                                .address
+                                                                .address[index]
+                                                                .placeId ??
+                                                            ''),
+                                                  );
+                                                  pickupController.text = state
+                                                      .address
+                                                      .address[index]
+                                                      .addressLine2;
+                                                  pickupController.selection =
+                                                      TextSelection.collapsed(
+                                                    offset: pickupController
+                                                        .text.length,
+                                                  );
+                                                  locationBlocBloc.add(
+                                                    FetchPickupLatLong(
+                                                        placeId: state
+                                                                .address
+                                                                .address[index]
+                                                                .placeId ??
+                                                            ''),
+                                                  );
+                                                } else if (dropenable) {
+                                                  dropController.text = state
+                                                      .address
+                                                      .address[index]
+                                                      .addressLine2;
+
+                                                  dropController.selection =
+                                                      TextSelection.collapsed(
+                                                          offset: dropController
+                                                              .text.length);
+
+                                                  locationBlocBloc.add(
+                                                    FetchDropLatlong(
+                                                        placeId: state
+                                                                .address
+                                                                .address[index]
+                                                                .placeId ??
+                                                            ''),
+                                                  );
+                                                } else {
+                                                  // _controllers
+                                                  //         .elementAt(currentTextField)
+                                                  //         .text =
+                                                  //     state.predictions
+                                                  //         .elementAt(index)
+                                                  //         .structuredFormatting
+                                                  //         .secondaryText;
+                                                }
+                                              },
+                                              child: Row(
+                                                children: [
+                                                  Container(
+                                                    height: 32.h,
+                                                    width: 32.w,
+                                                    child: Icon(
+                                                      Icons.star,
+                                                      color: Colors.white,
+                                                      size: 16,
+                                                    ),
+                                                    decoration: BoxDecoration(
+                                                      color: AppColors.greydark,
+                                                      shape: BoxShape.circle,
+                                                    ),
+                                                  ),
+                                                  SizedBox(width: 12.w),
+                                                  Flexible(
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        Text(
+                                                          state
+                                                              .address
+                                                              .address[index]
+                                                              .addressLine1,
+                                                          style: AppText
+                                                              .text16w400
+                                                              .copyWith(
+                                                            color:
+                                                                AppColors.black,
+                                                          ),
+                                                        ),
+                                                        Text(
+                                                          state
+                                                              .address
+                                                              .address[index]
+                                                              .addressLine2,
+                                                          maxLines: 3,
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                          style: AppText
+                                                              .text14w400
+                                                              .copyWith(
+                                                            color: AppColors
+                                                                .grey500,
+                                                            fontSize: 13.sp,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            )),
+                                  );
+                                }
+                                return SizedBox();
+                              },
+                            )
                           ],
                         ),
                       ),
                     ],
                   ),
                   Divider(
-                    thickness: 5,
+                    thickness: 1,
                     color: AppColors.greydark,
                   ),
                   sizedBoxWithHeight(10),
-                  BlocConsumer<LocationBlocBloc, LocationBlocState>(
-                    builder: (context, state) {
-                      if (state is SuggestionsLoaded) {
-                        // Loader.hide();
-                        return ListView.separated(
-                          shrinkWrap: true,
-                          primary: false,
-                          itemCount: state.predictions.length,
-                          itemBuilder: (context, index) {
-                            return InkWell(
-                              onTap: () {
-                                FocusScopeNode currentFocus =
-                                    FocusScope.of(context);
+                  BlocListener<address.AddressBloc, address.AddressState>(
+                    listener: (context, state) {
+                      if (state is address.AddAddressSucess) {
+                        context.showSnackBar(context,
+                            msg: 'Saved Successfully');
+                      }
+                    },
+                    child: BlocConsumer<LocationBlocBloc, LocationBlocState>(
+                      builder: (context, state) {
+                        if (state is SuggestionsLoaded) {
+                          // Loader.hide();
+                          return ListView.separated(
+                            shrinkWrap: true,
+                            primary: false,
+                            itemCount: state.predictions.length,
+                            itemBuilder: (context, index) {
+                              return InkWell(
+                                onTap: () {
+                                  FocusScopeNode currentFocus =
+                                      FocusScope.of(context);
 
-                                if (!currentFocus.hasPrimaryFocus) {
-                                  currentFocus.unfocus();
-                                }
+                                  if (!currentFocus.hasPrimaryFocus) {
+                                    currentFocus.unfocus();
+                                  }
 
-                                if (pickenabled) {
-                                  locationBlocBloc.add(
-                                    FetchPickupLatLong(
-                                        placeId: state.predictions
-                                            .elementAt(index)
-                                            .placeId),
-                                  );
-                                  pickupController.text = state.predictions
-                                      .elementAt(index)
-                                      .structuredFormatting
-                                      .secondaryText;
-                                  pickupController.selection =
-                                      TextSelection.collapsed(
-                                    offset: pickupController.text.length,
-                                  );
-                                  locationBlocBloc.add(
-                                    FetchPickupLatLong(
-                                        placeId: state.predictions
-                                            .elementAt(index)
-                                            .placeId),
-                                  );
-                                } else if (dropenable) {
-                                  dropController.text = state.predictions
-                                      .elementAt(index)
-                                      .structuredFormatting
-                                      .secondaryText;
+                                  if (pickenabled) {
+                                    locationBlocBloc.add(
+                                      FetchPickupLatLong(
+                                          placeId: state.predictions
+                                              .elementAt(index)
+                                              .placeId),
+                                    );
+                                    pickupController.text = state.predictions
+                                        .elementAt(index)
+                                        .structuredFormatting
+                                        .secondaryText;
+                                    pickupController.selection =
+                                        TextSelection.collapsed(
+                                      offset: pickupController.text.length,
+                                    );
+                                    locationBlocBloc.add(
+                                      FetchPickupLatLong(
+                                          placeId: state.predictions
+                                              .elementAt(index)
+                                              .placeId),
+                                    );
+                                  } else if (dropenable) {
+                                    dropController.text = state.predictions
+                                        .elementAt(index)
+                                        .structuredFormatting
+                                        .secondaryText;
 
-                                  dropController.selection =
-                                      TextSelection.collapsed(
-                                          offset: dropController.text.length);
+                                    dropController.selection =
+                                        TextSelection.collapsed(
+                                            offset: dropController.text.length);
 
-                                  locationBlocBloc.add(
-                                    FetchDropLatlong(
-                                        placeId: state.predictions
-                                            .elementAt(index)
-                                            .placeId),
-                                  );
-                                } else {
-                                  _controllers
-                                          .elementAt(currentTextField)
-                                          .text =
-                                      state.predictions
-                                          .elementAt(index)
-                                          .structuredFormatting
-                                          .secondaryText;
-                                }
-                              },
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  Container(
-                                    height: 50.h,
-                                    width: 50.w,
-                                    child: Icon(
-                                      Icons.access_time_filled_sharp,
-                                      color: Colors.white,
-                                      size: 30,
+                                    locationBlocBloc.add(
+                                      FetchDropLatlong(
+                                          placeId: state.predictions
+                                              .elementAt(index)
+                                              .placeId),
+                                    );
+                                  } else {
+                                    // _controllers
+                                    //         .elementAt(currentTextField)
+                                    //         .text =
+                                    //     state.predictions
+                                    //         .elementAt(index)
+                                    //         .structuredFormatting
+                                    //         .secondaryText;
+                                  }
+                                },
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Container(
+                                      height: 50.h,
+                                      width: 50.w,
+                                      child: Icon(
+                                        Icons.access_time_filled_sharp,
+                                        color: Colors.white,
+                                        size: 30,
+                                      ),
+                                      decoration: BoxDecoration(
+                                          color: AppColors.greydark,
+                                          shape: BoxShape.circle),
                                     ),
-                                    decoration: BoxDecoration(
-                                        color: AppColors.greydark,
-                                        shape: BoxShape.circle),
-                                  ),
-                                  sizedBoxWithWidth(10),
-                                  Flexible(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          state.predictions
-                                              .elementAt(index)
-                                              .structuredFormatting
-                                              .mainText,
-                                          style: AppText.text16w400.copyWith(
-                                            color: AppColors.black,
+                                    sizedBoxWithWidth(10),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            state.predictions
+                                                .elementAt(index)
+                                                .structuredFormatting
+                                                .mainText,
+                                            style: AppText.text16w400.copyWith(
+                                              color: AppColors.black,
+                                            ),
                                           ),
-                                        ),
-                                        Text(
-                                          state.predictions
-                                              .elementAt(index)
-                                              .structuredFormatting
-                                              .secondaryText,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: AppText.text14w400.copyWith(
-                                            color: AppColors.grey500,
-                                            fontSize: 13.sp,
+                                          Text(
+                                            state.predictions
+                                                .elementAt(index)
+                                                .structuredFormatting
+                                                .secondaryText,
+                                            maxLines: 3,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: AppText.text14w400.copyWith(
+                                              color: AppColors.grey500,
+                                              fontSize: 13.sp,
+                                            ),
                                           ),
-                                        )
+                                        ],
+                                      ),
+                                    ),
+                                    GestureDetector(
+                                      onTap: () async {
+                                        LatLng latLng = await getPlaceLatLng(
+                                            state.predictions
+                                                .elementAt(index)
+                                                .placeId);
+                                        context.read<address.AddressBloc>().add(
+                                              address.AddAddress(
+                                                element: AddressElement(
+                                                  placeId: state.predictions
+                                                      .elementAt(index)
+                                                      .placeId,
+                                                  addressLine1: state
+                                                      .predictions
+                                                      .elementAt(index)
+                                                      .structuredFormatting
+                                                      .mainText,
+                                                  latitude: latLng.latitude
+                                                      .toString(),
+                                                  longitude: latLng.longitude
+                                                      .toString(),
+                                                  addressLine2: state
+                                                      .predictions
+                                                      .elementAt(index)
+                                                      .structuredFormatting
+                                                      .secondaryText,
+                                                ),
+                                              ),
+                                            );
+                                      },
+                                      child: Icon(
+                                        Icons.saved_search,
+                                        size: 24.r,
+                                      ),
+                                    )
+                                  ],
+                                ),
+                              );
+                            },
+                            separatorBuilder: (c, i) {
+                              return Divider(
+                                thickness: 0.6,
+                                color: AppColors.greylight,
+                              );
+                            },
+                          );
+                        }
+                        return SizedBox();
+                      },
+                      listener: (context, state) {
+                        if (state is SuggestionsLoading) {
+                          //     Loader.show(context);
+                        } else if (state is DropLatLongLoading) {
+                          Loader.show(context);
+                        } else if (state is DropLatLongLoaded) {
+                          Loader.hide();
+
+                          droplatlong = state.latLng;
+                          SchedulerBinding.instance.addPostFrameCallback(
+                            (timeStamp) {
+                              BlocProvider.of<ConfirmrideBloc>(context).add(
+                                DoConfirmRide(
+                                    droplocation: jsonEncode(
+                                      [
+                                        {
+                                          "lat":
+                                              state.latLng.latitude.toString(),
+                                          "long":
+                                              state.latLng.longitude.toString(),
+                                          "address": dropController.text
+                                        },
                                       ],
                                     ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                          separatorBuilder: (c, i) {
-                            return Divider(
-                              thickness: 0.6,
-                              color: AppColors.greylight,
-                            );
-                          },
-                        );
-                      }
-                      return SizedBox();
-                    },
-                    listener: (context, state) {
-                      if (state is SuggestionsLoading) {
-                        //     Loader.show(context);
-                      } else if (state is DropLatLongLoading) {
-                        Loader.show(context);
-                      } else if (state is DropLatLongLoaded) {
-                        Loader.hide();
-
-                        droplatlong = state.latLng;
-                        SchedulerBinding.instance.addPostFrameCallback(
-                          (timeStamp) {
-                            BlocProvider.of<ConfirmrideBloc>(context).add(
-                              DoConfirmRide(
-                                  droplocation: jsonEncode(
-                                    [
+                                    pickuplocation: jsonEncode(
                                       {
-                                        "lat": state.latLng.latitude.toString(),
+                                        "lat":
+                                            pickuplatlong.latitude.toString(),
                                         "long":
-                                            state.latLng.longitude.toString(),
-                                        "address": dropController.text
+                                            pickuplatlong.longitude.toString(),
+                                        "address": pickupController.text
                                       },
-                                    ],
-                                  ),
-                                  pickuplocation: jsonEncode(
-                                    {
-                                      "lat": pickuplatlong.latitude.toString(),
-                                      "long":
-                                          pickuplatlong.longitude.toString(),
-                                      "address": pickupController.text
-                                    },
-                                  )),
-                            );
-                          },
-                        );
-                        locationBlocBloc.add(InitBloc());
-                      }
-                    },
+                                    )),
+                              );
+                            },
+                          );
+                          locationBlocBloc.add(InitBloc());
+                        }
+                      },
+                    ),
                   ),
                   Divider(
                     thickness: 0.6,
@@ -806,7 +980,7 @@ class _PickupDropAddressState extends State<PickupDropAddress> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "Set location on map",
+                              "Set location on map ",
                               style: AppText.text16w400.copyWith(
                                 color: AppColors.black,
                               ),
@@ -820,7 +994,15 @@ class _PickupDropAddressState extends State<PickupDropAddress> {
               ),
             )
           : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text(
+                  '${pickenabled ? 'Pick up Location' : 'Drop Location'}',
+                  style: AppText.text16w400,
+                ),
+                SizedBox(
+                  height: 16.h,
+                ),
                 SizedBox(
                   child: Stack(
                     children: [
@@ -881,10 +1063,6 @@ class _PickupDropAddressState extends State<PickupDropAddress> {
                                   dropController.selection =
                                       TextSelection.collapsed(
                                           offset: dropController.text.length);
-                                } else if (_controllers.length > 0) {
-                                  _controllers
-                                      .elementAt(currentTextField)
-                                      .text = _fullAddress;
                                 } else {
                                   pickupController.text = _fullAddress;
                                   pickupController.selection =
@@ -912,7 +1090,7 @@ class _PickupDropAddressState extends State<PickupDropAddress> {
                       )),
                     ],
                   ),
-                  height: 250.h,
+                  height: 280.h,
                 ),
               ],
             ),

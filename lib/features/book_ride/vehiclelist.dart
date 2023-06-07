@@ -14,6 +14,7 @@ import 'package:multitrip_user/features/book_ride/select_rider.dart';
 import 'package:multitrip_user/logic/vehicle/vehicle_controller.dart';
 import 'package:multitrip_user/shared/shared.dart';
 import 'package:multitrip_user/shared/ui/common/app_image.dart';
+import 'package:multitrip_user/shared/ui/common/icon_map.dart';
 import 'package:multitrip_user/shared/ui/common/spacing.dart';
 import 'package:multitrip_user/themes/app_text.dart';
 import 'package:provider/provider.dart';
@@ -57,8 +58,7 @@ class _VehicleListState extends State<VehicleList> {
   }
 
   getmarker() async {
-    final Uint8List markerIcon =
-        await getBytesFromAsset('assets/pin-1-svgrepo-com.png');
+    final Uint8List markerIcon = await getBytesFromAsset('assets/drop.png');
     setState(() {
       custommarker = markerIcon;
     });
@@ -112,14 +112,9 @@ class _VehicleListState extends State<VehicleList> {
           widget.pickuplat,
           widget.pickuplong,
         ),
-        infoWindow:
-            const InfoWindow(title: 'Marker Title', snippet: 'Marker Snippet'),
-        icon: await AppImage(
-          "assets/person.svg",
-          height: 60.h,
-          width: 60.w,
-        ).toBitmapDescriptor(
-            logicalSize: const Size(150, 150), imageSize: const Size(150, 150)),
+        infoWindow: const InfoWindow(
+            title: 'Pick up location', snippet: 'Marker Snippet'),
+        icon: await pickUpIcon,
       ),
     );
     markers.add(
@@ -131,13 +126,10 @@ class _VehicleListState extends State<VehicleList> {
           widget.droplong,
         ),
         infoWindow: const InfoWindow(
-          title: 'Marker Title',
+          title: 'Drop Location',
           snippet: 'Marker Snippet',
         ),
-        icon: await AppImage(
-          "assets/pin-1-svgrepo-com.png",
-        ).toBitmapDescriptor(
-            logicalSize: const Size(150, 150), imageSize: const Size(150, 150)),
+        icon: await dropIcon,
       ),
     );
 

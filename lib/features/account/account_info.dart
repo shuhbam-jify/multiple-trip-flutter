@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:multitrip_user/app_enverionment.dart';
 import 'package:multitrip_user/features/account/account_change_password.dart';
 import 'package:multitrip_user/features/account/account_email.dart';
@@ -17,6 +20,7 @@ class AccountInfo extends StatefulWidget {
 }
 
 class _AccountInfoState extends State<AccountInfo> {
+  final _profileImage = ValueNotifier<XFile?>(null);
   int selectedtab = 0;
   Widget _createTab(String text) {
     return Tab(
@@ -149,130 +153,38 @@ class _AccountInfoState extends State<AccountInfo> {
                   sizedBoxWithHeight(15),
                   InkWell(
                     onTap: () {
-                      showModalBottomSheet(
-                          context: context,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10)),
-                          builder: (context) {
-                            return FractionallySizedBox(
-                              heightFactor: 0.55,
-                              child: Container(
-                                padding: EdgeInsets.all(16),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.end,
-                                      children: [
-                                        InkWell(
-                                          onTap: () {
-                                            Navigator.pop(context);
-                                          },
-                                          child: Icon(
-                                            Icons.close,
-                                            color: AppColors.black,
-                                          ),
-                                        )
-                                      ],
-                                    ),
-                                    Center(
-                                      child: Text(
-                                        Strings.profilephoto,
-                                        style: GoogleFonts.poppins(
-                                          color: AppColors.black,
-                                          fontSize: 18.sp,
-                                          fontWeight: FontWeight.w300,
-                                        ),
-                                      ),
-                                    ),
-                                    Divider(
-                                      thickness: 1.2,
-                                      color: AppColors.greydark,
-                                    ),
-                                    Text(
-                                      Strings.profiledesc,
-                                      style: GoogleFonts.poppins(
-                                        color: AppColors.black,
-                                        fontSize: 13.sp,
-                                        fontWeight: FontWeight.w300,
-                                      ),
-                                    ),
-                                    Container(
-                                      width: double.infinity,
-                                      margin: EdgeInsets.only(
-                                        top: 15.h,
-                                        bottom: 0.h,
-                                      ),
-                                      child: Center(
-                                        child: Text(
-                                          Strings.update,
-                                          style: AppText.text15w500.copyWith(
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ),
-                                      padding: EdgeInsets.symmetric(
-                                        vertical: 16.h,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.green,
-                                        borderRadius: BorderRadius.circular(
-                                          10.r,
-                                        ),
-                                      ),
-                                    ),
-                                    sizedBoxWithHeight(15),
-                                    InkWell(
-                                      onTap: () {
-                                        Navigator.pop(context);
-                                      },
-                                      child: Container(
-                                        width: double.infinity,
-                                        margin: EdgeInsets.only(
-                                          top: 0.h,
-                                        ),
-                                        child: Center(
-                                          child: Text(
-                                            Strings.cancel,
-                                            style: AppText.text15w500.copyWith(
-                                              color: AppColors.black,
-                                            ),
-                                          ),
-                                        ),
-                                        padding: EdgeInsets.symmetric(
-                                          vertical: 16.h,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.greydark,
-                                          borderRadius: BorderRadius.circular(
-                                            10.r,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                decoration: BoxDecoration(
-                                    color: AppColors.greylight,
-                                    borderRadius: BorderRadius.circular(10)),
-                              ),
-                            );
-                          });
+                      _takeProfilePictureFromGallery(context);
                     },
                     child: Stack(
                       children: [
-                        Container(
-                          child: Icon(
-                            Icons.person,
-                            color: Colors.white,
-                            size: 40,
-                          ),
-                          padding: EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: AppColors.green,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
+                        ValueListenableBuilder<XFile?>(
+                            valueListenable: _profileImage,
+                            builder: (context, image, _) {
+                              return Container(
+                                height: 80.r,
+                                width: 80.r,
+                                child: image == null
+                                    ? Icon(
+                                        Icons.person,
+                                        color: Colors.white,
+                                        size: 40,
+                                      )
+                                    : SizedBox(),
+                                padding: EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  image: image != null
+                                      ? DecorationImage(
+                                          fit: BoxFit.cover,
+                                          image: FileImage(
+                                            File(image.path),
+                                          ),
+                                        )
+                                      : null,
+                                  color: AppColors.green,
+                                  shape: BoxShape.circle,
+                                ),
+                              );
+                            }),
                         Positioned(
                           right: 6.0,
                           bottom: .0,
@@ -497,5 +409,125 @@ class _AccountInfoState extends State<AccountInfo> {
         ),
       ),
     );
+  }
+
+  void _takeProfilePictureFromGallery(BuildContext context) {
+    showModalBottomSheet(
+        context: context,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        builder: (context) {
+          return FractionallySizedBox(
+            heightFactor: 0.55,
+            child: Container(
+              padding: EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      InkWell(
+                        onTap: () {
+                          Navigator.pop(context);
+                        },
+                        child: Icon(
+                          Icons.close,
+                          color: AppColors.black,
+                        ),
+                      )
+                    ],
+                  ),
+                  Center(
+                    child: Text(
+                      Strings.profilephoto,
+                      style: GoogleFonts.poppins(
+                        color: AppColors.black,
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.w300,
+                      ),
+                    ),
+                  ),
+                  Divider(
+                    thickness: 1.2,
+                    color: AppColors.greydark,
+                  ),
+                  Text(
+                    Strings.profiledesc,
+                    style: GoogleFonts.poppins(
+                      color: AppColors.black,
+                      fontSize: 13.sp,
+                      fontWeight: FontWeight.w300,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () async {
+                      final image = await ImagePicker()
+                          .pickImage(source: ImageSource.gallery);
+                      if (image != null) {
+                        _profileImage.value = image;
+                      }
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      margin: EdgeInsets.only(
+                        top: 15.h,
+                        bottom: 0.h,
+                      ),
+                      child: Center(
+                        child: Text(
+                          Strings.update,
+                          style: AppText.text15w500.copyWith(
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      padding: EdgeInsets.symmetric(
+                        vertical: 16.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.green,
+                        borderRadius: BorderRadius.circular(
+                          10.r,
+                        ),
+                      ),
+                    ),
+                  ),
+                  sizedBoxWithHeight(15),
+                  InkWell(
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      margin: EdgeInsets.only(
+                        top: 0.h,
+                      ),
+                      child: Center(
+                        child: Text(
+                          Strings.cancel,
+                          style: AppText.text15w500.copyWith(
+                            color: AppColors.black,
+                          ),
+                        ),
+                      ),
+                      padding: EdgeInsets.symmetric(
+                        vertical: 16.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.greydark,
+                        borderRadius: BorderRadius.circular(
+                          10.r,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              decoration: BoxDecoration(
+                  color: AppColors.greylight,
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+          );
+        });
   }
 }

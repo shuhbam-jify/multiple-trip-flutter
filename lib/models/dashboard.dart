@@ -12,7 +12,7 @@ class Dashboard {
   int code;
   String message;
   List<Driver> topRatedDrivers;
-  List<dynamic> previousDrivers;
+  List<Driver> previousDrivers;
   List<Driver> nearbyDrivers;
 
   Dashboard({
@@ -23,16 +23,35 @@ class Dashboard {
     required this.nearbyDrivers,
   });
 
-  factory Dashboard.fromJson(Map<String, dynamic> json) => Dashboard(
+  factory Dashboard.fromJson(Map<String, dynamic> json) {
+    final listPrvDriver = json["previous_drivers"] as List;
+    List<Driver> prvDriver = [];
+    listPrvDriver.forEach((e) {
+      if (e['id'] != null) {
+        prvDriver.add(Driver.fromJson(e));
+      }
+    });
+    final listRatedDriver = json["top_rated_drivers"] as List;
+    List<Driver> topRatedDriver = [];
+    listRatedDriver.forEach((e) {
+      if (e['id'] != null) {
+        topRatedDriver.add(Driver.fromJson(e));
+      }
+    });
+    final listNearByDriver = json["nearby_drivers"] as List;
+    List<Driver> listNearDriver = [];
+    listNearByDriver.forEach((e) {
+      if (e['id'] != null) {
+        listNearDriver.add(Driver.fromJson(e));
+      }
+    });
+    return Dashboard(
         code: json["code"],
         message: json["message"],
-        topRatedDrivers: List<Driver>.from(
-            json["top_rated_drivers"].map((x) => Driver.fromJson(x))),
-        previousDrivers:
-            List<dynamic>.from(json["previous_drivers"].map((x) => x)),
-        nearbyDrivers: List<Driver>.from(
-            json["nearby_drivers"].map((x) => Driver.fromJson(x))),
-      );
+        topRatedDrivers: topRatedDriver,
+        previousDrivers: prvDriver,
+        nearbyDrivers: listNearDriver);
+  }
 
   Map<String, dynamic> toJson() => {
         "code": code,
@@ -46,14 +65,14 @@ class Dashboard {
 }
 
 class Driver {
-  String id;
-  String userId;
-  String fname;
-  String lname;
-  String mobileNumber;
-  String email;
-  String photo;
-  String rating;
+  String? id;
+  String? userId;
+  String? fname;
+  String? lname;
+  String? mobileNumber;
+  String? email;
+  String? photo;
+  String? rating;
   String? latitude;
   String? longitude;
 

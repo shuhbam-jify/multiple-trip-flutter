@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:multitrip_user/app_enverionment.dart';
+import 'package:multitrip_user/routes.dart';
 import 'package:multitrip_user/shared/shared.dart';
 import 'package:multitrip_user/widgets/app_google_map.dart';
 
@@ -29,8 +31,9 @@ class _RideCompletedState extends State<RideCompleted> {
         leadingWidth: 40.w,
         leading: InkWell(
           onTap: () {
-            // AppEnvironment.navigator
-            //     .pushReplacementNamed(GeneralRoutes.bottombar, arguments: 0);
+            AppEnvironment.navigator.pushReplacementNamed(
+              GeneralRoutes.pages,
+            );
           },
           child: Icon(
             Icons.arrow_back,

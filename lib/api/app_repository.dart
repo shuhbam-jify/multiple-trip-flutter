@@ -1,4 +1,5 @@
 import 'package:multitrip_user/api/api_base_helper.dart';
+import 'package:multitrip_user/models/address.dart';
 
 class AppRepository {
   ApiBaseHelper helper = ApiBaseHelper();
@@ -293,6 +294,22 @@ class AppRepository {
       {
         "user_id": userid,
       },
+      {
+        "access_token": accesstoken,
+      },
+    );
+
+    return response;
+  }
+
+  Future<dynamic> addAddress(
+      {required String accesstoken,
+      required String userid,
+      required AddressElement element}) async {
+    print("User id is $userid");
+    final response = await helper.post(
+      "add_address",
+      {"user_id": userid, ...element.toJson()},
       {
         "access_token": accesstoken,
       },
