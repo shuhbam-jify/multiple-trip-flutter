@@ -41,7 +41,6 @@ class MembersController extends ChangeNotifier {
         notifyListeners();
       } else if (value["code"] == 401) {
         // Provider.of<AuthController>(context, listen: false).refreshaccesstoken(
-        //     context: context, function: getmembers(context: context));
       } else if (value["code"] == 201) {
         Loader.hide();
         //     context.showSnackBar(context, msg: value["message"]);
@@ -88,6 +87,8 @@ class MembersController extends ChangeNotifier {
         .then((value) {
       if (value["code"] == 200) {
         context.showSnackBar(context, msg: value["message"]);
+        Navigator.pop(context);
+
         this.getmembers(context: context).then((value) {
           Navigator.pop(context);
         });

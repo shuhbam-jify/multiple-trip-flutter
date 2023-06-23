@@ -29,7 +29,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
             accesstoken: prefs.getString(Strings.accesstoken)!,
           )
               .then((value) {
-            if (value["code"] == 200) {
+            if (value['code'] != null && value?["code"] == 200) {
               var _dashboard = Dashboard.fromJson(value);
               emit.call(
                 DashboardLoaded(
@@ -45,7 +45,6 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
               //     context: context,
               //     function: getdashboard(
               //         context: context, latitude: latitude, longitude: longitude));
-
             } else {
               emit.call(DashbLoadFail(error: value["message"]));
             }
@@ -53,7 +52,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
         } on Exception catch (e) {
           emit.call(
             DashbLoadFail(
-              error: e.toString() + "djdj",
+              error: 'Unable to Proccess your request try after some time',
             ),
           );
         }

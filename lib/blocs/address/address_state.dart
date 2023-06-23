@@ -44,3 +44,15 @@ class TokenExpired extends AddressState {
   // TODO: implement props
   List<Object?> get props => [];
 }
+
+class AddAddressSucess extends AddressState {
+  @override
+  // TODO: implement props
+  List<Object?> get props => [];
+}
+
+class AddAddressFailed extends AddressState {
+  @override
+  // TODO: implement props
+  List<Object?> get props => [];
+}

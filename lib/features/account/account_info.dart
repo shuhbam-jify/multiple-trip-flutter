@@ -1,6 +1,12 @@
+import 'dart:io';
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_overlay_loader/flutter_overlay_loader.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:multitrip_user/app_enverionment.dart';
+import 'package:multitrip_user/blocs/account/account_controller.dart';
 import 'package:multitrip_user/features/account/account_change_password.dart';
 import 'package:multitrip_user/features/account/account_email.dart';
 import 'package:multitrip_user/features/account/account_name.dart';
@@ -8,6 +14,7 @@ import 'package:multitrip_user/features/account/account_phone.dart';
 import 'package:multitrip_user/shared/shared.dart';
 import 'package:multitrip_user/shared/ui/common/spacing.dart';
 import 'package:multitrip_user/themes/app_text.dart';
+import 'package:provider/provider.dart';
 
 class AccountInfo extends StatefulWidget {
   const AccountInfo({super.key});
@@ -17,6 +24,7 @@ class AccountInfo extends StatefulWidget {
 }
 
 class _AccountInfoState extends State<AccountInfo> {
+  final _profileImage = ValueNotifier<XFile?>(null);
   int selectedtab = 0;
   Widget _createTab(String text) {
     return Tab(
@@ -135,305 +143,227 @@ class _AccountInfoState extends State<AccountInfo> {
           padding: EdgeInsets.all(16),
           child: TabBarView(
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    Strings.accountinfo,
-                    style: GoogleFonts.poppins(
-                      color: AppColors.black,
-                      fontSize: 24.sp,
-                      fontWeight: FontWeight.w500,
+              Consumer<AccountController>(builder: (context, model, _) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      Strings.accountinfo,
+                      style: GoogleFonts.poppins(
+                        color: AppColors.black,
+                        fontSize: 24.sp,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                  ),
-                  sizedBoxWithHeight(15),
-                  InkWell(
-                    onTap: () {
-                      showModalBottomSheet(
-                          context: context,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10)),
-                          builder: (context) {
-                            return FractionallySizedBox(
-                              heightFactor: 0.55,
-                              child: Container(
-                                padding: EdgeInsets.all(16),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.end,
-                                      children: [
-                                        InkWell(
-                                          onTap: () {
-                                            Navigator.pop(context);
-                                          },
-                                          child: Icon(
-                                            Icons.close,
-                                            color: AppColors.black,
-                                          ),
-                                        )
-                                      ],
-                                    ),
-                                    Center(
-                                      child: Text(
-                                        Strings.profilephoto,
-                                        style: GoogleFonts.poppins(
-                                          color: AppColors.black,
-                                          fontSize: 18.sp,
-                                          fontWeight: FontWeight.w300,
-                                        ),
-                                      ),
-                                    ),
-                                    Divider(
-                                      thickness: 1.2,
-                                      color: AppColors.greydark,
-                                    ),
-                                    Text(
-                                      Strings.profiledesc,
-                                      style: GoogleFonts.poppins(
-                                        color: AppColors.black,
-                                        fontSize: 13.sp,
-                                        fontWeight: FontWeight.w300,
-                                      ),
-                                    ),
-                                    Container(
-                                      width: double.infinity,
-                                      margin: EdgeInsets.only(
-                                        top: 15.h,
-                                        bottom: 0.h,
-                                      ),
-                                      child: Center(
-                                        child: Text(
-                                          Strings.update,
-                                          style: AppText.text15w500.copyWith(
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ),
-                                      padding: EdgeInsets.symmetric(
-                                        vertical: 16.h,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.green,
-                                        borderRadius: BorderRadius.circular(
-                                          10.r,
-                                        ),
-                                      ),
-                                    ),
-                                    sizedBoxWithHeight(15),
-                                    InkWell(
-                                      onTap: () {
-                                        Navigator.pop(context);
-                                      },
-                                      child: Container(
-                                        width: double.infinity,
-                                        margin: EdgeInsets.only(
-                                          top: 0.h,
-                                        ),
-                                        child: Center(
-                                          child: Text(
-                                            Strings.cancel,
-                                            style: AppText.text15w500.copyWith(
-                                              color: AppColors.black,
-                                            ),
-                                          ),
-                                        ),
-                                        padding: EdgeInsets.symmetric(
-                                          vertical: 16.h,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.greydark,
-                                          borderRadius: BorderRadius.circular(
-                                            10.r,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                decoration: BoxDecoration(
-                                    color: AppColors.greylight,
-                                    borderRadius: BorderRadius.circular(10)),
+                    sizedBoxWithHeight(15),
+                    InkWell(
+                      onTap: () {
+                        _takeProfilePictureFromGallery(context);
+                      },
+                      child: Stack(
+                        children: [
+                          ValueListenableBuilder<XFile?>(
+                              valueListenable: _profileImage,
+                              builder: (context, image, _) {
+                                return Container(
+                                  height: 80.r,
+                                  width: 80.r,
+                                  child: image == null
+                                      ? (model.userModel?.profilePhoto
+                                                  ?.isNotEmpty ??
+                                              false)
+                                          ? null
+                                          : Icon(
+                                              Icons.person,
+                                              color: Colors.white,
+                                              size: 40,
+                                            )
+                                      : SizedBox(),
+                                  padding: EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    image: (model.userModel?.profilePhoto
+                                                ?.isNotEmpty ??
+                                            false)
+                                        ? DecorationImage(
+                                            fit: BoxFit.cover,
+                                            image: NetworkImage(
+                                                model.userModel?.profilePhoto ??
+                                                    ''),
+                                          )
+                                        : image != null
+                                            ? DecorationImage(
+                                                fit: BoxFit.cover,
+                                                image: FileImage(File(
+                                                    _profileImage.value!.path)),
+                                              )
+                                            : null,
+                                    color: AppColors.green,
+                                    shape: BoxShape.circle,
+                                  ),
+                                );
+                              }),
+                          Positioned(
+                            right: 6.0,
+                            bottom: .0,
+                            child: Container(
+                              padding: EdgeInsets.all(2),
+                              decoration: BoxDecoration(
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey,
+                                    spreadRadius: 0,
+                                    blurRadius: 4,
+                                  )
+                                ],
+                                shape: BoxShape.circle,
+                                color: Colors.white,
                               ),
-                            );
-                          });
-                    },
-                    child: Stack(
-                      children: [
-                        Container(
-                          child: Icon(
-                            Icons.person,
-                            color: Colors.white,
-                            size: 40,
-                          ),
-                          padding: EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: AppColors.green,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        Positioned(
-                          right: 6.0,
-                          bottom: .0,
-                          child: Container(
-                            padding: EdgeInsets.all(2),
-                            decoration: BoxDecoration(
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.grey,
-                                  spreadRadius: 0,
-                                  blurRadius: 4,
-                                )
-                              ],
-                              shape: BoxShape.circle,
-                              color: Colors.white,
+                              child: Icon(
+                                Icons.edit,
+                                size: 14,
+                                color: AppColors.black,
+                              ),
                             ),
-                            child: Icon(
-                              Icons.edit,
-                              size: 14,
+                          )
+                        ],
+                      ),
+                    ),
+                    sizedBoxWithHeight(15),
+                    Text(
+                      Strings.basicinfo,
+                      style: GoogleFonts.poppins(
+                        color: AppColors.black,
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    sizedBoxWithHeight(20),
+                    InkWell(
+                      onTap: () {
+                        AppEnvironment.navigator.push(
+                          MaterialPageRoute(
+                            builder: (context) => AccountName(),
+                          ),
+                        );
+                      },
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            Strings.name,
+                            style: GoogleFonts.poppins(
                               color: AppColors.black,
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w400,
                             ),
                           ),
-                        )
-                      ],
-                    ),
-                  ),
-                  sizedBoxWithHeight(15),
-                  Text(
-                    Strings.basicinfo,
-                    style: GoogleFonts.poppins(
-                      color: AppColors.black,
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  sizedBoxWithHeight(20),
-                  InkWell(
-                    onTap: () {
-                      AppEnvironment.navigator.push(
-                        MaterialPageRoute(
-                          builder: (context) => AccountName(),
-                        ),
-                      );
-                    },
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          Strings.name,
-                          style: GoogleFonts.poppins(
-                            color: AppColors.black,
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w400,
+                          sizedBoxWithHeight(5),
+                          Text(
+                            model.userModel?.name ?? 'N/A',
+                            style: GoogleFonts.poppins(
+                              color: AppColors.colorgrey,
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.w400,
+                            ),
                           ),
-                        ),
-                        sizedBoxWithHeight(5),
-                        Text(
-                          "Harry",
-                          style: GoogleFonts.poppins(
-                            color: AppColors.colorgrey,
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w400,
+                          Divider(
+                            thickness: 1.2,
+                            color: AppColors.greylight,
                           ),
-                        ),
-                        Divider(
-                          thickness: 1.2,
-                          color: AppColors.greylight,
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  InkWell(
-                    onTap: () {
-                      AppEnvironment.navigator.push(
-                        MaterialPageRoute(
-                          builder: (context) => AccountPhone(),
-                        ),
-                      );
-                    },
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Phone number",
-                          style: GoogleFonts.poppins(
-                            color: AppColors.black,
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w400,
+                    InkWell(
+                      onTap: () {
+                        AppEnvironment.navigator.push(
+                          MaterialPageRoute(
+                            builder: (context) => AccountPhone(),
                           ),
-                        ),
-                        sizedBoxWithHeight(5),
-                        Row(
-                          children: [
-                            Text(
-                              "+19999888777",
-                              style: GoogleFonts.poppins(
-                                color: AppColors.colorgrey,
-                                fontSize: 12.sp,
-                                fontWeight: FontWeight.w400,
+                        );
+                      },
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Phone number",
+                            style: GoogleFonts.poppins(
+                              color: AppColors.black,
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                          sizedBoxWithHeight(5),
+                          Row(
+                            children: [
+                              Text(
+                                model.userModel?.mobileNumber ?? 'N/A',
+                                style: GoogleFonts.poppins(
+                                  color: AppColors.colorgrey,
+                                  fontSize: 12.sp,
+                                  fontWeight: FontWeight.w400,
+                                ),
                               ),
-                            ),
-                            Icon(
-                              Icons.check_circle,
-                              color: AppColors.green,
-                              size: 14,
-                            )
-                          ],
-                        ),
-                        Divider(
-                          thickness: 1.2,
-                          color: AppColors.greylight,
-                        ),
-                      ],
-                    ),
-                  ),
-                  InkWell(
-                    onTap: () {
-                      AppEnvironment.navigator.push(
-                        MaterialPageRoute(
-                          builder: (context) => AccountEmail(),
-                        ),
-                      );
-                    },
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Email",
-                          style: GoogleFonts.poppins(
-                            color: AppColors.black,
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w400,
+                              Icon(
+                                Icons.check_circle,
+                                color: AppColors.green,
+                                size: 14,
+                              )
+                            ],
                           ),
-                        ),
-                        sizedBoxWithHeight(5),
-                        Row(
-                          children: [
-                            Text(
-                              "harrynew1234@gmail.com",
-                              style: GoogleFonts.poppins(
-                                color: AppColors.colorgrey,
-                                fontSize: 12.sp,
-                                fontWeight: FontWeight.w400,
-                              ),
-                            ),
-                            Icon(
-                              Icons.check_circle,
-                              color: AppColors.green,
-                              size: 14,
-                            )
-                          ],
-                        ),
-                        Divider(
-                          thickness: 1.2,
-                          color: AppColors.greylight,
-                        ),
-                      ],
+                          Divider(
+                            thickness: 1.2,
+                            color: AppColors.greylight,
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
+                    InkWell(
+                      onTap: () {
+                        AppEnvironment.navigator.push(
+                          MaterialPageRoute(
+                            builder: (context) => AccountEmail(),
+                          ),
+                        );
+                      },
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Email",
+                            style: GoogleFonts.poppins(
+                              color: AppColors.black,
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                          sizedBoxWithHeight(5),
+                          Row(
+                            children: [
+                              Text(
+                                model.userModel?.email ?? 'N/A',
+                                style: GoogleFonts.poppins(
+                                  color: AppColors.colorgrey,
+                                  fontSize: 12.sp,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                              Icon(
+                                Icons.check_circle,
+                                color: AppColors.green,
+                                size: 14,
+                              )
+                            ],
+                          ),
+                          Divider(
+                            thickness: 1.2,
+                            color: AppColors.greylight,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              }),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -497,5 +427,148 @@ class _AccountInfoState extends State<AccountInfo> {
         ),
       ),
     );
+  }
+
+  void _takeProfilePictureFromGallery(BuildContext context) {
+    showModalBottomSheet(
+        context: context,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        builder: (context) {
+          return FractionallySizedBox(
+            heightFactor: 0.58,
+            child: Container(
+              padding: EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      InkWell(
+                        onTap: () {
+                          Navigator.pop(context);
+                        },
+                        child: Icon(
+                          Icons.close,
+                          color: AppColors.black,
+                        ),
+                      )
+                    ],
+                  ),
+                  Center(
+                    child: Text(
+                      Strings.profilephoto,
+                      style: GoogleFonts.poppins(
+                        color: AppColors.black,
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.w300,
+                      ),
+                    ),
+                  ),
+                  Divider(
+                    thickness: 1.2,
+                    color: AppColors.greydark,
+                  ),
+                  Text(
+                    Strings.profiledesc,
+                    style: GoogleFonts.poppins(
+                      color: AppColors.black,
+                      fontSize: 13.sp,
+                      fontWeight: FontWeight.w300,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () async {
+                      final image = await ImagePicker()
+                          .pickImage(source: ImageSource.gallery);
+                      if (image != null) {
+                        _profileImage.value = image;
+                        _uploadImage(image.path);
+                      }
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      margin: EdgeInsets.only(
+                        top: 15.h,
+                        bottom: 0.h,
+                      ),
+                      child: Center(
+                        child: Text(
+                          Strings.update,
+                          style: AppText.text15w500.copyWith(
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      padding: EdgeInsets.symmetric(
+                        vertical: 16.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.green,
+                        borderRadius: BorderRadius.circular(
+                          10.r,
+                        ),
+                      ),
+                    ),
+                  ),
+                  sizedBoxWithHeight(15),
+                  InkWell(
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      margin: EdgeInsets.only(
+                        top: 0.h,
+                      ),
+                      child: Center(
+                        child: Text(
+                          Strings.cancel,
+                          style: AppText.text15w500.copyWith(
+                            color: AppColors.black,
+                          ),
+                        ),
+                      ),
+                      padding: EdgeInsets.symmetric(
+                        vertical: 16.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.greydark,
+                        borderRadius: BorderRadius.circular(
+                          10.r,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              decoration: BoxDecoration(
+                  color: AppColors.greylight,
+                  borderRadius: BorderRadius.circular(10)),
+            ),
+          );
+        });
+  }
+
+  Future<void> _uploadImage(String path) async {
+    try {
+      Navigator.pop(context);
+
+      Loader.show(context);
+      await context.read<AccountController>().updateProfile(
+            path: path,
+            onFailure: () {
+              Loader.hide();
+              context.showSnackBar(context,
+                  msg: 'Failed to Updated, Please try again');
+            },
+            onSuccess: () {
+              Loader.hide();
+              context.showSnackBar(context, msg: 'Successfully Updated');
+              Navigator.pop(context);
+            },
+          );
+    } catch (e) {
+    } finally {}
   }
 }

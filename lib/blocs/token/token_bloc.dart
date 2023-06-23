@@ -50,24 +50,32 @@ class TokenBloc extends Bloc<TokenEvent, TokenState> {
         emit.call(TokenLoading());
 
         try {
-          await AppRepository()
-              .getaccesstoken(
-            refreshtoken: prefs.getString(Strings.refreshtoken)!,
-          )
-              .then((value) {
-            if (value["code"] == 200) {
-              var accessToken = AccessToken.fromJson(value);
-              emit.call(AccessTokenLoaded(accessToken: accessToken));
-              prefs.setString(Strings.accesstoken, accessToken.accessToken);
-            } else if (value["code"] == 201) {
-              emit.call(
-                TokenFaied(error: value["message"]),
-              );
-              //  context.showSnackBar(context, msg: value["message"]);
-            } else if (value["code"] == 401) {
-              this.add(FetchRefreshToken(context: event.context));
-            }
-          });
+          final refreshToken = prefs.getString(Strings.refreshtoken);
+          if (refreshToken != null) {
+            await AppRepository()
+                .getaccesstoken(
+              refreshtoken: prefs.getString(Strings.refreshtoken)!,
+            )
+                .then((value) {
+              if (value == null || value['code'] == null) {
+                this.add(FetchAccessToken(context: event.context));
+                return;
+              }
+
+              if (value["code"] == 200) {
+                var accessToken = AccessToken.fromJson(value);
+                emit.call(AccessTokenLoaded(accessToken: accessToken));
+                prefs.setString(Strings.accesstoken, accessToken.accessToken);
+              } else if (value["code"] == 201) {
+                emit.call(
+                  TokenFaied(error: value["message"]),
+                );
+                //  context.showSnackBar(context, msg: value["message"]);
+              } else if (value["code"] == 401) {
+                this.add(FetchRefreshToken(context: event.context));
+              }
+            });
+          }
         } on Exception catch (e) {
           emit.call(TokenFaied(error: e.toString()));
         }

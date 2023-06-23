@@ -30,3 +30,8 @@ class DropLatLongLoaded extends LocationBlocState {
   final LatLng latLng;
   DropLatLongLoaded({required this.latLng});
 }
+
+class DropSecondaryLatLongLoaded extends LocationBlocState {
+  final LatLng latLng;
+  DropSecondaryLatLongLoaded({required this.latLng});
+}

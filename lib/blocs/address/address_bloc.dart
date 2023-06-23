@@ -12,6 +12,48 @@ part 'address_state.dart';
 class AddressBloc extends Bloc<AddressEvent, AddressState> {
   AddressBloc() : super(AddressInitial()) {
     on<AddressEvent>((event, emit) async {
+      if (event is AddAddress) {
+        print("Event is $emit");
+
+        final SharedPreferences prefs = await SharedPreferences.getInstance();
+
+        try {
+          await AppRepository()
+              .addAddress(
+                  userid: prefs.getString(
+                    Strings.userid,
+                  )!,
+                  accesstoken: prefs.getString(
+                    Strings.accesstoken,
+                  )!,
+                  element: event.element)
+              .then((value) {
+            if (value["code"] == 200) {
+              emit.call(
+                AddAddressSucess(),
+              );
+            } else if (value["code"] == 201) {
+              emit.call(
+                AddAddressSucess(),
+              );
+            } else if (value["code"] == 401) {
+              emit.call(TokenExpired());
+            } else {
+              emit.call(
+                AddressFailed(
+                  error: value["message"],
+                ),
+              );
+            }
+          });
+        } catch (e) {
+          emit.call(
+            AddressFailed(
+              error: e.toString(),
+            ),
+          );
+        }
+      }
       if (event is FetchAddress) {
         print("Event is $emit");
         emit.call(AddressLoading());

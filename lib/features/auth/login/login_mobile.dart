@@ -54,19 +54,20 @@ class _LoginMobileState extends State<LoginMobile> {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     int deviceType = 1;
 
-    final fcmToken = await FirebaseMessaging.instance.getToken();
-
-    if (Platform.isAndroid) {
-      deviceType = 1;
-    } else {
-      deviceType = 2;
-    }
-
     try {
+      final fcmToken = await FirebaseMessaging.instance.getToken();
+
+      if (Platform.isAndroid) {
+        deviceType = 1;
+      } else {
+        deviceType = 2;
+      }
+
       final login = await AppRepository().douserlogin(
           accesstoken: prefs.getString(
-            Strings.accesstoken,
-          )!,
+                Strings.accesstoken,
+              ) ??
+              '',
           devicetype: deviceType.toString(),
           mobilenumber: phoneController.text,
           fcm: fcmToken!);

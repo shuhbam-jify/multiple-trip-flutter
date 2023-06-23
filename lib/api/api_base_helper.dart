@@ -80,6 +80,46 @@ class ApiBaseHelper {
     return responseJson;
   }
 
+  Future<dynamic> uploadImage(
+    String url,
+    Map body,
+    String filePath,
+    Map<String, String>? headers,
+  ) async {
+    debugPrint(
+      'Api Post, url $url',
+    );
+    dynamic responseJson;
+    try {
+      var request = http.MultipartRequest(
+          'POST', Uri.parse(_baseUrl + 'update_customer_image'));
+      request.fields.addAll({...body});
+      request.headers.addAll({...headers ?? {}});
+      request.files
+          .add(await http.MultipartFile.fromPath('profile_picture', filePath));
+      var response = await request.send().timeout(
+            Duration(
+              seconds: 7,
+            ),
+          );
+      final responseData = await http.Response.fromStream(response);
+      responseJson = _returnResponse(responseData);
+    } on SocketException {
+      debugPrint('No net');
+      throw FetchDataException(
+        message: 'No Internet connection',
+      );
+    } on TimeoutException {
+      if (Loader.isShown) {
+        Loader.hide();
+      }
+    }
+    debugPrint(
+      'api post.',
+    );
+    return responseJson;
+  }
+
   Future<dynamic> put(
     String url,
     dynamic body,

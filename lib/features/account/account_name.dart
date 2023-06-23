@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_overlay_loader/flutter_overlay_loader.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:multitrip_user/blocs/account/account_controller.dart';
 import 'package:multitrip_user/features/add_member/add_member.dart';
 import 'package:multitrip_user/shared/shared.dart';
 import 'package:multitrip_user/shared/ui/common/spacing.dart';
@@ -14,6 +18,22 @@ class AccountName extends StatefulWidget {
 }
 
 class _AccountNameState extends State<AccountName> {
+  final _firstName = TextEditingController();
+  final _lastName = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      _firstName.text =
+          context.read<AccountController>().userModel?.name?.split(' ').first ??
+              '';
+      _lastName.text =
+          context.read<AccountController>().userModel?.name?.split(' ').last ??
+              '';
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -66,39 +86,38 @@ class _AccountNameState extends State<AccountName> {
             sizedBoxWithHeight(20),
             CommonTextField(
               title: "First Name",
-              controller: TextEditingController(
-                text: "Harry",
-              ),
+              controller: _firstName,
             ),
             sizedBoxWithHeight(15),
             CommonTextField(
               title: "Last Name",
-              controller: TextEditingController(
-                text: "Clinton",
-              ),
+              controller: _lastName,
             ),
             Spacer(),
-            Container(
-              width: double.infinity,
-              margin: EdgeInsets.only(
-                top: 15.h,
-                bottom: 30.h,
-              ),
-              child: Center(
-                child: Text(
-                  "Update",
-                  style: AppText.text15w500.copyWith(
-                    color: Colors.white,
+            GestureDetector(
+              onTap: _handleOnTap,
+              child: Container(
+                width: double.infinity,
+                margin: EdgeInsets.only(
+                  top: 15.h,
+                  bottom: 30.h,
+                ),
+                child: Center(
+                  child: Text(
+                    "Update",
+                    style: AppText.text15w500.copyWith(
+                      color: Colors.white,
+                    ),
                   ),
                 ),
-              ),
-              padding: EdgeInsets.symmetric(
-                vertical: 16.h,
-              ),
-              decoration: BoxDecoration(
-                color: AppColors.green,
-                borderRadius: BorderRadius.circular(
-                  10.r,
+                padding: EdgeInsets.symmetric(
+                  vertical: 16.h,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.green,
+                  borderRadius: BorderRadius.circular(
+                    10.r,
+                  ),
                 ),
               ),
             ),
@@ -106,5 +125,28 @@ class _AccountNameState extends State<AccountName> {
         ),
       ),
     );
+  }
+
+  Future<void> _handleOnTap() async {
+    FocusScope.of(context).unfocus();
+    if (_firstName.text.isEmpty || _lastName.text.isEmpty) {
+      context.showSnackBar(context, msg: 'Please enter the fields');
+      return;
+    }
+    Loader.show(context);
+    await context.read<AccountController>().updateName(
+          firstName: _firstName.text,
+          LastName: _lastName.text,
+          onFailure: () {
+            Loader.hide();
+            context.showSnackBar(context,
+                msg: 'Failed to Updated, Please try again');
+          },
+          onSuccess: () {
+            Loader.hide();
+            context.showSnackBar(context, msg: 'Successfully Updated');
+            Navigator.pop(context);
+          },
+        );
   }
 }

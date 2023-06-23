@@ -1,6 +1,9 @@
 import 'package:country_picker/country_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_overlay_loader/flutter_overlay_loader.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:multitrip_user/blocs/account/account_controller.dart';
 import 'package:multitrip_user/shared/shared.dart';
 import 'package:multitrip_user/shared/ui/common/spacing.dart';
 import 'package:multitrip_user/themes/app_text.dart';
@@ -25,6 +28,14 @@ class _AccountPhoneState extends State<AccountPhone> {
     displayNameNoCountryCode: "",
     e164Key: "",
   );
+  final _textController = TextEditingController();
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -139,6 +150,7 @@ class _AccountPhoneState extends State<AccountPhone> {
                           child: TextFormField(
                             keyboardType: TextInputType.phone,
                             maxLength: 11,
+                            controller: _textController,
                             decoration: InputDecoration(
                               counterText: '',
                               hintText: "Mobile Number",
@@ -166,27 +178,30 @@ class _AccountPhoneState extends State<AccountPhone> {
               ),
             ),
             Spacer(),
-            Container(
-              width: double.infinity,
-              margin: EdgeInsets.only(
-                top: 15.h,
-                bottom: 30.h,
-              ),
-              child: Center(
-                child: Text(
-                  "Update",
-                  style: AppText.text15w500.copyWith(
-                    color: Colors.white,
+            GestureDetector(
+              onTap: _handleOnTap,
+              child: Container(
+                width: double.infinity,
+                margin: EdgeInsets.only(
+                  top: 15.h,
+                  bottom: 30.h,
+                ),
+                child: Center(
+                  child: Text(
+                    "Update",
+                    style: AppText.text15w500.copyWith(
+                      color: Colors.white,
+                    ),
                   ),
                 ),
-              ),
-              padding: EdgeInsets.symmetric(
-                vertical: 16.h,
-              ),
-              decoration: BoxDecoration(
-                color: AppColors.green,
-                borderRadius: BorderRadius.circular(
-                  10.r,
+                padding: EdgeInsets.symmetric(
+                  vertical: 16.h,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.green,
+                  borderRadius: BorderRadius.circular(
+                    10.r,
+                  ),
                 ),
               ),
             ),
@@ -194,5 +209,27 @@ class _AccountPhoneState extends State<AccountPhone> {
         ),
       ),
     );
+  }
+
+  Future<void> _handleOnTap() async {
+    FocusScope.of(context).unfocus();
+    if (_textController.text.isEmpty) {
+      context.showSnackBar(context, msg: 'Please enter the fields');
+      return;
+    }
+    Loader.show(context);
+    await context.read<AccountController>().updateMobileNumber(
+          mobileNumber: country.phoneCode + _textController.text,
+          onFailure: () {
+            Loader.hide();
+            context.showSnackBar(context,
+                msg: 'Failed to Updated, Please try again');
+          },
+          onSuccess: () {
+            Loader.hide();
+            context.showSnackBar(context, msg: 'Successfully Updated');
+            Navigator.pop(context);
+          },
+        );
   }
 }

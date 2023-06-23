@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:multitrip_user/features/account/account.dart';
 import 'package:multitrip_user/features/ride_history/previous_ride.dart';
 import 'package:multitrip_user/features/dashboard/home.dart';
@@ -56,6 +57,7 @@ class _PagesWidgetState extends State<PagesWidget> {
           currentPage = HomeScreen(
             parentScaffoldKey: widget.scaffoldKey,
           );
+
           break;
         case 1:
           currentPage = PreviousRides(

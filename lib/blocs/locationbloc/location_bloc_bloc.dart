@@ -39,7 +39,17 @@ class LocationBlocBloc extends Bloc<LocationBlocEvent, LocationBlocState> {
             DropLatLongLoaded(latLng: latLng),
           );
         } catch (e) {
-          Fluttertoast.showToast(msg: e.toString());
+          Fluttertoast.showToast(msg: 'Invalid Drop Location Location.');
+        }
+      } else if (event is FetchSecondDropLatlong) {
+        emit.call(DropLatLongLoading());
+        try {
+          final latLng = await getPlaceLatLng(event.placeId);
+          emit.call(
+            DropSecondaryLatLongLoaded(latLng: latLng),
+          );
+        } catch (e) {
+          Fluttertoast.showToast(msg: 'Invalid Drop Location Location.');
         }
       } else if (event is FetchPickupLatLong) {
         emit.call(PickupLatLongLoading());
@@ -49,7 +59,7 @@ class LocationBlocBloc extends Bloc<LocationBlocEvent, LocationBlocState> {
             PickupLatLongLoaded(picklatlong: latLng),
           );
         } catch (e) {
-          Fluttertoast.showToast(msg: e.toString());
+          Fluttertoast.showToast(msg: 'Invalid Pickup Location Location.');
         }
       } else if (event is ClearSuggestionList) {
         emit.call(SuggestionsLoaded(predictions: []));
@@ -59,8 +69,12 @@ class LocationBlocBloc extends Bloc<LocationBlocEvent, LocationBlocState> {
 }
 
 Future<LatLng> getPlaceLatLng(String placeId) async {
-  PlacesDetailsResponse placeDetails =
-      await places.getDetailsByPlaceId(placeId);
+  final placeDetails = await places.getDetailsByPlaceId(placeId);
+
+  if (placeDetails.hasNoResults) {
+    return LatLng(placeDetails.result.geometry!.location.lat,
+        placeDetails.result.geometry!.location.lng);
+  }
 
   return LatLng(placeDetails.result.geometry!.location.lat,
       placeDetails.result.geometry!.location.lng);

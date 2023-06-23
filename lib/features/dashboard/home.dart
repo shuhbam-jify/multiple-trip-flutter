@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,20 +7,24 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:get/get_state_manager/get_state_manager.dart';
+import 'package:get/state_manager.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:multitrip_user/app_enverionment.dart';
+import 'package:multitrip_user/blocs/account/account_controller.dart';
 import 'package:multitrip_user/blocs/address/address_bloc.dart' as ad;
 import 'package:multitrip_user/blocs/dashboard/dashboard_bloc.dart';
 import 'package:multitrip_user/blocs/token/token_bloc.dart';
 import 'package:multitrip_user/features/book_ride/pickupdropaddress.dart';
 import 'package:multitrip_user/features/book_ride/schedule_ride.dart';
-import 'package:multitrip_user/multitrip.dart';
+import 'package:multitrip_user/features/permission_page.dart';
 import 'package:multitrip_user/shared/globles.dart';
 import 'package:multitrip_user/shared/shared.dart';
 import 'package:multitrip_user/shared/ui/common/app_image.dart';
 import 'package:multitrip_user/shared/ui/common/spacing.dart';
 import 'package:multitrip_user/themes/app_text.dart';
 import 'package:multitrip_user/widgets/app_google_map.dart';
+import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
   final GlobalKey<ScaffoldState>? parentScaffoldKey;
@@ -43,6 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
   late String fullAddress;
 
   ad.AddressBloc addressBloc = ad.AddressBloc();
+  Widget? errorPermssionWidget;
 
   @override
   void dispose() {
@@ -66,6 +69,8 @@ class _HomeScreenState extends State<HomeScreen> {
           // Android's shouldShowRequestPermissionRationale
           // returned true. According to Android guidelines
           // your App should show an explanatory UI now.
+          Navigator.push(
+              context, MaterialPageRoute(builder: (_) => NoPermission()));
           return Future.error(error);
         }
       }
@@ -76,6 +81,11 @@ class _HomeScreenState extends State<HomeScreen> {
         context.showSnackBar(context,
             msg: error
                 .message!); // Permissions are denied forever, handle appropriately.
+        dashboardBloc.add(
+          FetchDashboardData(latLng: LatLng(0.0, 0.0), fulladdress: ''),
+        );
+        Navigator.push(
+            context, MaterialPageRoute(builder: (_) => NoPermission()));
         return Future.error(error);
       }
 
@@ -93,14 +103,10 @@ class _HomeScreenState extends State<HomeScreen> {
           progressIndicator: CircularProgressIndicator(
             color: AppColors.black,
           ));
-      // When we reach here, permissions are granted and we can
-      // continue accessing the position of the device.
-      var position = await Geolocator.getCurrentPosition(
-              desiredAccuracy: LocationAccuracy.low)
-          .catchError((e) {
-        print("error is $e");
-      });
 
+      var position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.best,
+      );
       print(" Location is ${position.latitude}");
       setState(() {
         currentPosition = position;
@@ -131,26 +137,32 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (e) {
       Loader.hide();
       context.showSnackBar(context, msg: e.toString());
+    } finally {
+      Loader.hide();
     }
   }
 
   @override
   void initState() {
-    fetchlocatiocation();
+    super.initState();
+
     dashboardBloc = BlocProvider.of<DashboardBloc>(context);
     addressBloc = BlocProvider.of<ad.AddressBloc>(context);
 
     addressBloc.add(ad.FetchAddress());
-    super.initState();
+    fetchlocatiocation().onError((error, stackTrace) => {errorPermssionWidget});
+    Provider.of<AccountController>(context, listen: false)
+        .getPofileData(isEnableLoading: false);
   }
 
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        exit(0);
+        SystemNavigator.pop(animated: true);
         // SystemChannels.platform.invokeMethod<void>('SystemNavigator.pop');
         // return false;
+        return false;
       },
       child: Scaffold(
         backgroundColor: AppColors.appColor,
@@ -160,36 +172,16 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _renderbody() {
-    return MultiBlocListener(
-        listeners: [
-          BlocListener<TokenBloc, TokenState>(
-            listener: (context, state) {
-              if (state is TokenLoading) {
-                Loader.show(context,
-                    progressIndicator: CircularProgressIndicator(
-                      color: AppColors.appColor,
-                    ));
-              } else if (state is AccessTokenLoaded) {
-                Loader.hide();
-                dashboardBloc.add(FetchDashboardData(
-                    fulladdress: fullAddress,
-                    latLng: LatLng(
-                        currentPosition.latitude, currentPosition.longitude)));
-                addressBloc.add(ad.FetchAddress());
-                // isLoggedIn(
-                //   context: context,
-                // );
-                //  isLoggedIn(context: context);
-              } else if (state is TokenFaied) {
-                Loader.hide();
-              }
-              // TODO: implement listener
-            },
-          ),
-        ],
-        child: HomeScreenData(
-          dashboardBloc: dashboardBloc,
-        ));
+    return RefreshIndicator(
+      onRefresh: () async {
+        addressBloc.add(ad.FetchAddress());
+        fetchlocatiocation()
+            .onError((error, stackTrace) => {errorPermssionWidget});
+      },
+      child: HomeScreenData(
+        dashboardBloc: dashboardBloc,
+      ),
+    );
   }
 }
 
@@ -283,16 +275,20 @@ class _HomeScreenDataState extends State<HomeScreenData> {
                             scrollDirection: Axis.horizontal,
                             shrinkWrap: true,
                             itemBuilder: (context, index) {
+                              if (state.dashboard.topRatedDrivers[index].id ==
+                                  null) {
+                                return SizedBox();
+                              }
                               return _driverview(
-                                  driverImage: state.dashboard.topRatedDrivers
-                                      .elementAt(index)
-                                      .photo,
-                                  driverName: state.dashboard.topRatedDrivers
-                                      .elementAt(index)
-                                      .fname,
-                                  driverRating: state.dashboard.topRatedDrivers
-                                      .elementAt(index)
-                                      .rating);
+                                  driverImage: state.dashboard
+                                          .topRatedDrivers[index].photo ??
+                                      '',
+                                  driverName: state.dashboard
+                                          .topRatedDrivers[index].fname ??
+                                      '',
+                                  driverRating: state.dashboard
+                                          .topRatedDrivers[index].rating ??
+                                      '0');
                             },
                             separatorBuilder: (context, index) {
                               return SizedBox(
@@ -348,54 +344,59 @@ class _HomeScreenDataState extends State<HomeScreenData> {
                         ],
                       ),
                       sizedBoxWithHeight(10),
-                      Visibility(
-                        visible: state.dashboard.previousDrivers.isNotEmpty
-                            ? true
-                            : false,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Divider(
-                              thickness: 5,
-                              color: AppColors.greydark,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Divider(
+                            thickness: 2,
+                            color: AppColors.greydark,
+                          ),
+                          sizedBoxWithHeight(10),
+                          Text(
+                            "Previous drivers",
+                            style: AppText.text18w400.copyWith(
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.black,
                             ),
-                            sizedBoxWithHeight(10),
-                            Text(
-                              "Previous drivers",
-                              style: AppText.text18w400.copyWith(
-                                fontWeight: FontWeight.w900,
-                                color: AppColors.black,
-                              ),
-                            ),
-                            sizedBoxWithHeight(10),
-                            SizedBox(
-                              height: 130.h,
-                              child: ListView.separated(
-                                  padding: EdgeInsets.only(
-                                    left: 20.w,
+                          ),
+                          sizedBoxWithHeight(10),
+                          SizedBox(
+                            height: 130.h,
+                            child: state.dashboard.previousDrivers.length > 0
+                                ? ListView.separated(
+                                    padding: EdgeInsets.only(
+                                      left: 20.w,
+                                    ),
+                                    scrollDirection: Axis.horizontal,
+                                    shrinkWrap: true,
+                                    itemBuilder: (context, index) {
+                                      return _driverview(
+                                          driverImage: "",
+                                          driverName: "Sugam",
+                                          driverRating: "0.0");
+                                    },
+                                    separatorBuilder: (context, index) {
+                                      return SizedBox(
+                                        width: 50.w,
+                                      );
+                                    },
+                                    itemCount:
+                                        state.dashboard.nearbyDrivers.length)
+                                : Center(
+                                    child: Text(
+                                      'No Previous drivers Found',
+                                      style: AppText.text16w400.copyWith(
+                                        fontWeight: FontWeight.w900,
+                                        color: AppColors.black,
+                                      ),
+                                    ),
                                   ),
-                                  scrollDirection: Axis.horizontal,
-                                  shrinkWrap: true,
-                                  itemBuilder: (context, index) {
-                                    return _driverview(
-                                        driverImage: "",
-                                        driverName: "Sugam",
-                                        driverRating: "0.0");
-                                  },
-                                  separatorBuilder: (context, index) {
-                                    return SizedBox(
-                                      width: 50.w,
-                                    );
-                                  },
-                                  itemCount:
-                                      state.dashboard.nearbyDrivers.length),
-                            ),
-                            Divider(
-                              thickness: 5,
-                              color: AppColors.greydark,
-                            ),
-                          ],
-                        ),
+                          ),
+                          Divider(
+                            thickness: 5,
+                            color: AppColors.greydark,
+                          ),
+                        ],
                       ),
                       sizedBoxWithHeight(10),
                       Text(
@@ -425,6 +426,59 @@ class _HomeScreenDataState extends State<HomeScreenData> {
                   ),
                 ),
               ),
+            );
+          }
+          if (state is DashbLoadFail) {
+            return Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text('Something Went Wrong!!!'),
+                GestureDetector(
+                  onTap: () async {
+                    var position = await Geolocator.getCurrentPosition(
+                            desiredAccuracy: LocationAccuracy.low)
+                        .catchError((e) {
+                      print("error is $e");
+                    });
+                    List<Placemark> placemarks = await GeocodingPlatform
+                        .instance
+                        .placemarkFromCoordinates(
+                            position.latitude, position.longitude);
+
+                    Placemark place = placemarks.first;
+
+                    final fullAddress =
+                        '${place.name}, ${place.subThoroughfare} ${place.thoroughfare}, ${place.subLocality}, ${place.locality}, ${place.administrativeArea} ${place.postalCode}, ${place.country}';
+
+                    dashboardBloc.add(
+                      FetchDashboardData(
+                          latLng: LatLng(position.latitude, position.longitude),
+                          fulladdress: fullAddress),
+                    );
+                  },
+                  child: Container(
+                    width: 200.w,
+                    child: Center(
+                      child: Text(
+                        "Retry",
+                        style: AppText.text15w400.copyWith(
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    padding: EdgeInsets.symmetric(
+                      vertical: 16.h,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.green,
+                      borderRadius: BorderRadius.circular(
+                        10.r,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             );
           }
           return SizedBox();
@@ -458,56 +512,70 @@ class _HomeScreenDataState extends State<HomeScreenData> {
                 primary: false,
                 itemCount: state.address.address.length,
                 itemBuilder: (context, index) {
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Container(
-                        height: 50.h,
-                        width: 50.w,
-                        child: Icon(
-                          Icons.location_on_sharp,
+                  return GestureDetector(
+                    onTap: () {
+                      final dbBoard = context.read<DashboardBloc>().state;
+                      if (dbBoard is DashboardLoaded) {
+                        AppEnvironment.navigator.push(MaterialPageRoute(
+                          builder: (context) => PickupDropAddress(
+                            lat: dbBoard.currentlocation.latitude,
+                            long: dbBoard.currentlocation.longitude,
+                            pickupaddess: dbBoard.fulladdeess,
+                            dropLocation: state.address.address[index],
+                          ),
+                        ));
+                      }
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          height: 50.h,
+                          width: 50.w,
+                          child: Icon(
+                            Icons.location_on_sharp,
+                            color: AppColors.black,
+                            size: 30,
+                          ),
+                          decoration: BoxDecoration(
+                              color: AppColors.greylight,
+                              shape: BoxShape.circle),
+                        ),
+                        sizedBoxWithWidth(10),
+                        Flexible(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Text(
+                                state.address.address
+                                    .elementAt(index)
+                                    .addressLine1,
+                                style: AppText.text16w400.copyWith(
+                                  color: AppColors.black,
+                                ),
+                              ),
+                              Text(
+                                state.address.address
+                                    .elementAt(index)
+                                    .addressLine2,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppText.text14w400.copyWith(
+                                  color: AppColors.grey500,
+                                  fontSize: 13.sp,
+                                ),
+                              )
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          Icons.arrow_forward_ios,
                           color: AppColors.black,
-                          size: 30,
-                        ),
-                        decoration: BoxDecoration(
-                            color: AppColors.greylight, shape: BoxShape.circle),
-                      ),
-                      sizedBoxWithWidth(10),
-                      Flexible(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              state.address.address
-                                  .elementAt(index)
-                                  .addressLine1,
-                              style: AppText.text16w400.copyWith(
-                                color: AppColors.black,
-                              ),
-                            ),
-                            Text(
-                              state.address.address
-                                  .elementAt(index)
-                                  .addressLine2,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppText.text14w400.copyWith(
-                                color: AppColors.grey500,
-                                fontSize: 13.sp,
-                              ),
-                            )
-                          ],
-                        ),
-                      ),
-                      Spacer(
-                        flex: 5,
-                      ),
-                      Icon(
-                        Icons.arrow_forward_ios,
-                        color: AppColors.black,
-                        size: 15,
-                      )
-                    ],
+                          size: 15,
+                        )
+                      ],
+                    ),
                   );
                 },
                 separatorBuilder: (c, i) {
@@ -519,7 +587,7 @@ class _HomeScreenDataState extends State<HomeScreenData> {
               ),
               sizedBoxWithHeight(10),
               Divider(
-                thickness: 5,
+                thickness: 2,
                 color: AppColors.greydark,
               ),
             ],

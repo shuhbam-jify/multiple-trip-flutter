@@ -28,7 +28,7 @@ class ConfirmRide {
         code: json["code"],
         message: json["message"],
         bookingNumber: json["booking_number"],
-        amount: json["amount"],
+        amount: json["amount"].toString(),
         timing: json["timing"],
       );
 

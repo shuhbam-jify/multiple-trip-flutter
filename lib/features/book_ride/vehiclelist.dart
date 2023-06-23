@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:custom_map_markers/custom_map_markers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -14,6 +16,7 @@ import 'package:multitrip_user/features/book_ride/select_rider.dart';
 import 'package:multitrip_user/logic/vehicle/vehicle_controller.dart';
 import 'package:multitrip_user/shared/shared.dart';
 import 'package:multitrip_user/shared/ui/common/app_image.dart';
+import 'package:multitrip_user/shared/ui/common/icon_map.dart';
 import 'package:multitrip_user/shared/ui/common/spacing.dart';
 import 'package:multitrip_user/themes/app_text.dart';
 import 'package:provider/provider.dart';
@@ -25,10 +28,11 @@ class VehicleList extends StatefulWidget {
   final double pickuplat;
   final double pickuplong;
   final double droplat;
+  final double droplong;
   final String bookingid;
   final String amount;
+  final LatLng? extraDropLatLng;
 
-  final double droplong;
   const VehicleList({
     super.key,
     required this.droplat,
@@ -37,6 +41,7 @@ class VehicleList extends StatefulWidget {
     required this.bookingid,
     required this.pickuplat,
     required this.pickuplong,
+    this.extraDropLatLng,
   });
 
   @override
@@ -57,11 +62,14 @@ class _VehicleListState extends State<VehicleList> {
   }
 
   getmarker() async {
-    final Uint8List markerIcon =
-        await getBytesFromAsset('assets/pin-1-svgrepo-com.png');
-    setState(() {
-      custommarker = markerIcon;
-    });
+    try {
+      final Uint8List markerIcon = await getBytesFromAsset('assets/drop.png');
+      setState(() {
+        custommarker = markerIcon;
+      });
+    } catch (e) {
+      // TODO
+    }
   }
 
   VehicleController controller = VehicleController();
@@ -81,20 +89,30 @@ class _VehicleListState extends State<VehicleList> {
   }
 
   void makeLines() async {
-    await polylinePoints
-        .getRouteBetweenCoordinates(
-      "AIzaSyD6MRqmdjtnIHn7tyDLX-qsjreaTkuzSCY",
-      PointLatLng(widget.pickuplat, widget.pickuplong), //Starting LATLANG
-      PointLatLng(widget.droplat, widget.droplong), //End LATLANG
-      travelMode: TravelMode.driving,
-    )
-        .then((value) {
-      value.points.forEach((PointLatLng point) {
-        polylineCoordinates.add(LatLng(point.latitude, point.longitude));
-      });
-    }).then((value) {
-      addPolyLine();
+    final resultant = await polylinePoints.getRouteBetweenCoordinates(
+        "AIzaSyD6MRqmdjtnIHn7tyDLX-qsjreaTkuzSCY",
+        PointLatLng(widget.pickuplat, widget.pickuplong), //Starting LATLANG
+        PointLatLng(widget.droplat, widget.droplong), //End LATLANG
+        travelMode: TravelMode.driving,
+        wayPoints: [
+          if (widget.extraDropLatLng != null) ...{
+            PolylineWayPoint(
+              stopOver: true,
+              location:
+                  '${widget.extraDropLatLng!.latitude},${widget.extraDropLatLng!.longitude}',
+            )
+          },
+          // ignore: body_might_complete_normally_catch_error
+        ]).catchError((E) {
+      print(E);
     });
+
+    resultant.points.forEach((PointLatLng point) {
+      polylineCoordinates.add(LatLng(point.latitude, point.longitude));
+    });
+
+    addPolyLine();
+    initMarkers();
   }
 
   int selectedvalue = 0;
@@ -112,16 +130,28 @@ class _VehicleListState extends State<VehicleList> {
           widget.pickuplat,
           widget.pickuplong,
         ),
-        infoWindow:
-            const InfoWindow(title: 'Marker Title', snippet: 'Marker Snippet'),
-        icon: await AppImage(
-          "assets/person.svg",
-          height: 60.h,
-          width: 60.w,
-        ).toBitmapDescriptor(
-            logicalSize: const Size(150, 150), imageSize: const Size(150, 150)),
+        infoWindow: const InfoWindow(
+            title: 'Pick up location', snippet: 'Marker Snippet'),
+        icon: await pickUpIcon,
       ),
     );
+    if (widget.extraDropLatLng != null) {
+      markers.add(
+        Marker(
+          markerId: const MarkerId('marker_3'),
+          draggable: false,
+          position: LatLng(
+            widget.extraDropLatLng!.latitude,
+            widget.extraDropLatLng!.longitude,
+          ),
+          infoWindow: const InfoWindow(
+            title: 'Secondary Drop Location',
+            snippet: 'Marker Snippet',
+          ),
+          icon: await dropIcon,
+        ),
+      );
+    }
     markers.add(
       Marker(
         markerId: const MarkerId('marker_1'),
@@ -131,13 +161,10 @@ class _VehicleListState extends State<VehicleList> {
           widget.droplong,
         ),
         infoWindow: const InfoWindow(
-          title: 'Marker Title',
+          title: 'Drop Location',
           snippet: 'Marker Snippet',
         ),
-        icon: await AppImage(
-          "assets/pin-1-svgrepo-com.png",
-        ).toBitmapDescriptor(
-            logicalSize: const Size(150, 150), imageSize: const Size(150, 150)),
+        icon: await dropIcon,
       ),
     );
 
@@ -179,7 +206,7 @@ class _VehicleListState extends State<VehicleList> {
                       widget.pickuplat,
                       widget.pickuplong,
                     ),
-                    15,
+                    8,
                   ),
                 );
               },
@@ -188,7 +215,7 @@ class _VehicleListState extends State<VehicleList> {
                   widget.pickuplat,
                   widget.pickuplong,
                 ),
-                zoom: 15.0,
+                zoom: 8.0,
               ),
             ),
             InkWell(
@@ -234,6 +261,9 @@ class _VehicleListState extends State<VehicleList> {
                             color: AppColors.appColor,
                           ));
                     } else {
+                      if (controller.vehicles?.vehicles.isEmpty ?? true) {
+                        return SizedBox();
+                      }
                       return ListView.separated(
                         shrinkWrap: true,
                         itemBuilder: (context, index) {
@@ -280,6 +310,8 @@ class _VehicleListState extends State<VehicleList> {
                                 });
                               },
                               child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   CircleAvatar(
                                     radius: 25,
@@ -288,41 +320,45 @@ class _VehicleListState extends State<VehicleList> {
                                       "assets/1299198.svg",
                                     ),
                                   ),
-                                  sizedBoxWithWidth(10),
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        value.vehicles!.vehicles
-                                            .elementAt(index)
-                                            .vehicleName,
-                                        style: GoogleFonts.poppins(
-                                            color: Colors.black,
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 16.sp),
-                                      ),
-                                      Text(
-                                        value.vehicles!.vehicles
-                                            .elementAt(index)
-                                            .vehicleNumber,
-                                        style: GoogleFonts.poppins(
-                                            color: AppColors.grey500,
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 13.sp),
-                                      ),
-                                      Text(
-                                        value.vehicles!.vehicles
-                                            .elementAt(index)
-                                            .vehicleType,
-                                        style: GoogleFonts.poppins(
-                                            color: AppColors.grey500,
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 13.sp),
-                                      )
-                                    ],
+                                  // sizedBoxWithWidth(10),
+                                  Flexible(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          value.vehicles!.vehicles
+                                              .elementAt(index)
+                                              .vehicleName,
+                                          maxLines: 2,
+                                          style: GoogleFonts.poppins(
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 16.sp),
+                                        ),
+                                        Text(
+                                          value.vehicles!.vehicles
+                                              .elementAt(index)
+                                              .vehicleNumber,
+                                          maxLines: 2,
+                                          style: GoogleFonts.poppins(
+                                              color: AppColors.grey500,
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 13.sp),
+                                        ),
+                                        Text(
+                                          value.vehicles!.vehicles
+                                              .elementAt(index)
+                                              .vehicleType,
+                                          style: GoogleFonts.poppins(
+                                              color: AppColors.grey500,
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 13.sp),
+                                        )
+                                      ],
+                                    ),
                                   ),
-                                  Spacer(),
+                                  const Spacer(),
                                   Container(
                                     height: 20.h,
                                     width: 20.w,
@@ -411,6 +447,7 @@ class _VehicleListState extends State<VehicleList> {
                           vehicleid: vehicleid!,
                           amount: widget.amount,
                           droplatlong: LatLng(widget.droplat, widget.droplong),
+                          dropExtralatlong: widget.extraDropLatLng,
                           pickuplatlong:
                               LatLng(widget.pickuplat, widget.pickuplong),
                           polylines: Set<Polyline>.of(polylines.values),

@@ -38,19 +38,21 @@ class AddressElement {
   String addressLine2;
   String latitude;
   String longitude;
+  String? placeId;
 
-  AddressElement({
-    required this.addressLine1,
-    required this.addressLine2,
-    required this.latitude,
-    required this.longitude,
-  });
+  AddressElement(
+      {required this.addressLine1,
+      required this.addressLine2,
+      required this.latitude,
+      required this.longitude,
+      this.placeId});
 
   factory AddressElement.fromJson(Map<String, dynamic> json) => AddressElement(
         addressLine1: json["address_line_1"],
         addressLine2: json["address_line_2"],
         latitude: json["latitude"],
         longitude: json["longitude"],
+        placeId: json["place_id"],
       );
 
   Map<String, dynamic> toJson() => {
@@ -58,5 +60,6 @@ class AddressElement {
         "address_line_2": addressLine2,
         "latitude": latitude,
         "longitude": longitude,
+        "place_id": placeId
       };
 }
