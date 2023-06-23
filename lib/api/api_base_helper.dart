@@ -72,7 +72,6 @@ class ApiBaseHelper {
       if (Loader.isShown) {
         Loader.hide();
       }
-      Fluttertoast.showToast(msg: "API TIMEOUT");
     }
     debugPrint(
       'api post.',

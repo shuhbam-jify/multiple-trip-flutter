@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_overlay_loader/flutter_overlay_loader.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:multitrip_user/api/app_repository.dart';
+import 'package:multitrip_user/blocs/account/account_controller.dart';
 import 'package:multitrip_user/blocs/login/login_bloc.dart';
 import 'package:multitrip_user/blocs/token/token_bloc.dart';
 import 'package:multitrip_user/features/auth/login/login_mobile.dart';
@@ -10,6 +11,7 @@ import 'package:multitrip_user/features/settings/settings_add_home_work.dart';
 import 'package:multitrip_user/features/settings/settings_shortcuts.dart';
 import 'package:multitrip_user/shared/shared.dart';
 import 'package:multitrip_user/shared/ui/common/spacing.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../app_enverionment.dart';
@@ -77,192 +79,201 @@ class _SettingsState extends State<Settings> {
             );
           }
         },
-        child: Padding(
-          padding: EdgeInsets.all(
-            16.r,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Settings",
-                style: GoogleFonts.poppins(
-                  color: Colors.black,
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.w500,
+        child: Consumer<AccountController>(builder: (context, model, _) {
+          return Padding(
+            padding: EdgeInsets.all(
+              16.r,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Settings",
+                  style: GoogleFonts.poppins(
+                    color: Colors.black,
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-              ),
-              sizedBoxWithHeight(40),
-              Row(
-                children: [
-                  InkWell(
-                    onTap: () {},
-                    child: Container(
+                sizedBoxWithHeight(40),
+                Row(
+                  children: [
+                    Container(
                       padding: EdgeInsets.all(15),
+                      clipBehavior: Clip.hardEdge,
+                      height: 60.h,
+                      width: 60.w,
                       decoration: BoxDecoration(
                         color: AppColors.green,
                         shape: BoxShape.circle,
+                        image:
+                            (model.userModel?.profilePhoto?.isNotEmpty ?? false)
+                                ? DecorationImage(
+                                    fit: BoxFit.cover,
+                                    image: NetworkImage(
+                                        model.userModel?.profilePhoto ?? ''),
+                                  )
+                                : null,
                       ),
-                      child: Icon(
-                        Icons.person,
-                        size: 40,
-                        color: Colors.white,
-                      ),
+                      child:
+                          (model.userModel?.profilePhoto?.isNotEmpty ?? false)
+                              ? null
+                              : Icon(
+                                  Icons.person,
+                                  size: 40,
+                                  color: Colors.white,
+                                ),
                     ),
-                  ),
-                  sizedBoxWithWidth(8),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Harry",
-                        style: GoogleFonts.poppins(
-                          color: Colors.black,
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w400,
+                    sizedBoxWithWidth(8),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          model.userModel?.name ?? "",
+                          style: GoogleFonts.poppins(
+                            color: Colors.black,
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w400,
+                          ),
                         ),
-                      ),
-                      Text(
-                        "+19999888777",
-                        style: GoogleFonts.poppins(
-                          color: Colors.black,
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w300,
+                        Text(
+                          model.userModel?.mobileNumber ?? "",
+                          style: GoogleFonts.poppins(
+                            color: Colors.black,
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w300,
+                          ),
                         ),
-                      ),
-                      Text(
-                        "harrynew1234@gmail.com",
-                        style: GoogleFonts.poppins(
-                          color: Colors.black,
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w300,
+                        Text(
+                          model.userModel?.email ?? "",
+                          style: GoogleFonts.poppins(
+                            color: Colors.black,
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w300,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                  Spacer(),
-                  Icon(
-                    Icons.arrow_forward_ios,
-                    color: Colors.black,
-                    size: 14.h,
-                  )
-                ],
-              ),
-              sizedBoxWithHeight(40),
-              InkWell(
-                onTap: () {
-                  AppEnvironment.navigator.push(
-                    MaterialPageRoute(
-                      builder: (context) => AddHomeAndWork(),
+                      ],
                     ),
-                  );
-                },
-                child: settingoptions(
-                  icon: Icon(Icons.home),
-                  text: "Add Home",
+                    Spacer(),
+                  ],
                 ),
-              ),
-              InkWell(
-                onTap: () {
-                  AppEnvironment.navigator.push(
-                    MaterialPageRoute(
-                      builder: (context) => AddHomeAndWork(),
-                    ),
-                  );
-                },
-                child: settingoptions(
-                  icon: Icon(Icons.work),
-                  text: "Add Work",
-                ),
-              ),
-              InkWell(
-                onTap: () {
-                  AppEnvironment.navigator.push(
-                    MaterialPageRoute(
-                      builder: (context) => SettingsShortCuts(),
-                    ),
-                  );
-                },
-                child: settingoptions(
-                  icon: Icon(Icons.location_on_rounded),
-                  text: "Shortcuts",
-                ),
-              ),
-              settingoptions(
-                icon: Icon(Icons.lock),
-                text: "Privacy",
-              ),
-              Spacer(),
-              Divider(
-                color: AppColors.greydark,
-                thickness: 5,
-              ),
-              InkWell(
-                onTap: () async {
-                  Loader.show(context,
-                      progressIndicator: CircularProgressIndicator(
-                        color: AppColors.green,
-                      ));
-
-                  final SharedPreferences prefs =
-                      await SharedPreferences.getInstance();
-
-                  try {
-                    await AppRepository()
-                        .douserlogout(
-                            accesstoken: prefs.getString(
-                              Strings.accesstoken,
-                            )!,
-                            userid: prefs.getString(Strings.userid)!)
-                        .then((value) {
-                      if (value["code"] == 401) {
-                        BlocProvider.of<TokenBloc>(context).add(
-                          FetchAccessToken(context: context),
-                        );
-                      } else if (value["code"] == 201) {
-                        Loader.hide();
-                        context.showSnackBar(context, msg: value["message"]);
-                      } else if (value["code"] == 200) {
-                        Loader.hide();
-
-                        // BlocProvider.of<DashboardBloc>(context).add(
-                        //   InitBloc(),
-                        // );
-
-                        BlocProvider.of<TokenBloc>(context)
-                            .add(FetchRefreshToken(context: context));
-                        AppEnvironment.navigator.pushAndRemoveUntil(
-                          MaterialPageRoute<void>(
-                              builder: (BuildContext context) =>
-                                  const LoginMobile()),
-                          (route) {
-                            return false;
-                          },
-                        );
-                        prefs.clear();
-                      }
-                    });
-                  } catch (e) {
-                    Loader.hide();
-                    context.showSnackBar(context, msg: e.toString());
-                  }
-                  // loginBloc.add(
-                  //   DoUserLogout(),
-                  // );
-                },
-                child: Text(
-                  "Sign Out",
-                  style: GoogleFonts.poppins(
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.colorRed,
+                sizedBoxWithHeight(40),
+                InkWell(
+                  onTap: () {
+                    // AppEnvironment.navigator.push(
+                    //   MaterialPageRoute(
+                    //     builder: (context) => AddHomeAndWork(),
+                    //   ),
+                    // );
+                  },
+                  child: settingoptions(
+                    icon: Icon(Icons.home),
+                    text: "Add Home",
                   ),
                 ),
-              ),
-              sizedBoxWithHeight(20),
-            ],
-          ),
-        ),
+                InkWell(
+                  onTap: () {
+                    // AppEnvironment.navigator.push(
+                    //   MaterialPageRoute(
+                    //     builder: (context) => AddHomeAndWork(),
+                    //   ),
+                    // );
+                  },
+                  child: settingoptions(
+                    icon: Icon(Icons.work),
+                    text: "Add Work",
+                  ),
+                ),
+                InkWell(
+                  onTap: () {
+                    // AppEnvironment.navigator.push(
+                    //   MaterialPageRoute(
+                    //     builder: (context) => SettingsShortCuts(),
+                    //   ),
+                    // );
+                  },
+                  child: settingoptions(
+                    icon: Icon(Icons.location_on_rounded),
+                    text: "Shortcuts",
+                  ),
+                ),
+                settingoptions(
+                  icon: Icon(Icons.lock),
+                  text: "Privacy",
+                ),
+                Spacer(),
+                Divider(
+                  color: AppColors.greydark,
+                  thickness: 5,
+                ),
+                InkWell(
+                  onTap: () async {
+                    Loader.show(context,
+                        progressIndicator: CircularProgressIndicator(
+                          color: AppColors.green,
+                        ));
+
+                    final SharedPreferences prefs =
+                        await SharedPreferences.getInstance();
+
+                    try {
+                      await AppRepository()
+                          .douserlogout(
+                              accesstoken: prefs.getString(
+                                Strings.accesstoken,
+                              )!,
+                              userid: prefs.getString(Strings.userid)!)
+                          .then((value) {
+                        if (value["code"] == 401) {
+                          BlocProvider.of<TokenBloc>(context).add(
+                            FetchAccessToken(context: context),
+                          );
+                        } else if (value["code"] == 201) {
+                          Loader.hide();
+                          context.showSnackBar(context, msg: value["message"]);
+                        } else if (value["code"] == 200) {
+                          Loader.hide();
+
+                          // BlocProvider.of<DashboardBloc>(context).add(
+                          //   InitBloc(),
+                          // );
+                          AppEnvironment.navigator.pushAndRemoveUntil(
+                            MaterialPageRoute<void>(
+                                builder: (BuildContext context) =>
+                                    const LoginMobile()),
+                            (route) {
+                              return false;
+                            },
+                          );
+
+                          BlocProvider.of<TokenBloc>(context)
+                              .add(FetchRefreshToken(context: context));
+
+                          prefs.clear();
+                        }
+                      });
+                    } catch (e) {
+                      Loader.hide();
+                      context.showSnackBar(context, msg: e.toString());
+                    }
+                    // loginBloc.add(
+                    //   DoUserLogout(),
+                    // );
+                  },
+                  child: Text(
+                    "Sign Out",
+                    style: GoogleFonts.poppins(
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.colorRed,
+                    ),
+                  ),
+                ),
+                sizedBoxWithHeight(20),
+              ],
+            ),
+          );
+        }),
       ),
     );
   }

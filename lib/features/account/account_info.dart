@@ -28,24 +28,15 @@ class _AccountInfoState extends State<AccountInfo> {
   int selectedtab = 0;
   Widget _createTab(String text) {
     return Tab(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: Container(
-              child: Center(
-                child: Text(
-                  text,
-                  style: GoogleFonts.poppins(
-                    color: AppColors.black,
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-              ),
-            ),
+      child: Center(
+        child: Text(
+          text,
+          style: GoogleFonts.poppins(
+            color: AppColors.black,
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w400,
           ),
-        ],
+        ),
       ),
     );
   }
@@ -89,7 +80,7 @@ class _AccountInfoState extends State<AccountInfo> {
                               color: AppColors.greylight, width: 6.sp)),
                     ),
                     child: TabBar(
-                      padding: EdgeInsets.only(right: 100.w),
+                      // padding: EdgeInsets.only(right: 100.w),
                       indicatorColor: AppColors.green,
                       // indicator: BoxDecoration(
                       //   color: AppColors.greenAccent,
@@ -102,8 +93,10 @@ class _AccountInfoState extends State<AccountInfo> {
                           selectedtab = v;
                         });
                       },
+
                       tabs: [
                         Container(
+                          width: double.infinity,
                           color: selectedtab == 0
                               ? AppColors.greylight
                               : Colors.transparent,
@@ -113,6 +106,7 @@ class _AccountInfoState extends State<AccountInfo> {
                           child: _createTab(Strings.accountinfo),
                         ),
                         Container(
+                            width: double.infinity,
                             color: selectedtab == 1
                                 ? AppColors.greylight
                                 : Colors.transparent,
