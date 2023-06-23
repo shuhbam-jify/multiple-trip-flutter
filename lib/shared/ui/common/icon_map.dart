@@ -5,13 +5,13 @@ import 'package:widget_to_marker/widget_to_marker.dart';
 
 final pickUpIcon = AppImage(
   "assets/pickup.png",
-  height: 200,
-  width: 200,
+  height: 160,
+  width: 160,
 ).toBitmapDescriptor(
-    logicalSize: const Size(200, 200), imageSize: const Size(200, 200));
+    logicalSize: const Size(160, 160), imageSize: const Size(160, 160));
 final dropIcon = AppImage(
   "assets/drop.png",
-  height: 200,
-  width: 200,
+  height: 160,
+  width: 160,
 ).toBitmapDescriptor(
-    logicalSize: const Size(200, 200), imageSize: const Size(200, 200));
+    logicalSize: const Size(160, 160), imageSize: const Size(160, 160));

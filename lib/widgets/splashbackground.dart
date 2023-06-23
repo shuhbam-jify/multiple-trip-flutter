@@ -13,6 +13,7 @@ class SplashBackground extends StatelessWidget {
       children: [
         AppImage(
           Images.background,
+          fit: BoxFit.cover,
         ),
         Padding(
             padding: EdgeInsets.only(
@@ -23,6 +24,7 @@ class SplashBackground extends StatelessWidget {
                 Images.appLogo,
                 height: 170.h,
                 width: 170.h,
+                fit: BoxFit.contain,
               ),
             ))
       ],

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:get_it/get_it.dart';
 import 'package:multitrip_user/app_enverionment.dart';
+import 'package:multitrip_user/blocs/account/account_controller.dart';
 import 'package:multitrip_user/blocs/address/address_bloc.dart';
 import 'package:multitrip_user/blocs/bookride/bookride_bloc.dart';
 import 'package:multitrip_user/blocs/confirmride/confirmride_bloc.dart';
@@ -71,6 +72,9 @@ class _MultiTripState extends State<MultiTrip> {
       child: MultiProvider(
         providers: [
           ChangeNotifierProvider(
+            create: (_) => getIt<AccountController>(),
+          ),
+          ChangeNotifierProvider(
             create: (_) => getIt<MembersController>(),
           ),
           // ChangeNotifierProvider(
@@ -101,7 +105,9 @@ class _MultiTripState extends State<MultiTrip> {
     getIt.registerSingleton(
       VehicleController(),
     );
-
+    getIt.registerSingleton(
+      AccountController(),
+    );
     getIt.registerSingleton(
       MembersController(),
     );

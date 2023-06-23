@@ -5,10 +5,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_overlay_loader/flutter_overlay_loader.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:multitrip_user/api/app_repository.dart';
 import 'package:multitrip_user/app_enverionment.dart';
 import 'package:multitrip_user/blocs/bookride/bookride_bloc.dart';
 import 'package:multitrip_user/features/book_ride/booking_otp.dart';
 import 'package:multitrip_user/shared/shared.dart';
+import 'package:multitrip_user/shared/ui/common/icon_map.dart';
 import 'package:multitrip_user/shared/ui/common/spacing.dart';
 import 'package:multitrip_user/themes/app_text.dart';
 
@@ -17,17 +19,18 @@ class SelectRider extends StatefulWidget {
   final String amount;
   final LatLng pickuplatlong;
   final LatLng droplatlong;
+  final LatLng? dropExtralatlong;
   final Set<Polyline> polylines;
   final String vehicleid;
-  const SelectRider({
-    super.key,
-    required this.amount,
-    required this.polylines,
-    required this.droplatlong,
-    required this.pickuplatlong,
-    required this.bookingid,
-    required this.vehicleid,
-  });
+  const SelectRider(
+      {super.key,
+      required this.amount,
+      required this.polylines,
+      required this.droplatlong,
+      required this.pickuplatlong,
+      required this.bookingid,
+      required this.vehicleid,
+      this.dropExtralatlong});
 
   @override
   State<SelectRider> createState() => _SelectRiderState();
@@ -35,16 +38,61 @@ class SelectRider extends StatefulWidget {
 
 class _SelectRiderState extends State<SelectRider> {
   BookrideBloc bookrideBloc = BookrideBloc();
+  Set<Marker> markers = {};
 
   @override
   void initState() {
     bookrideBloc = BlocProvider.of<BookrideBloc>(context);
     super.initState();
+    initMarkers();
   }
 
   @override
   void dispose() {
     super.dispose();
+  }
+
+  initMarkers() async {
+    markers = {};
+
+    markers.add(
+      Marker(
+        markerId: const MarkerId('marker_2'),
+        draggable: false,
+        position: widget.pickuplatlong,
+        infoWindow: const InfoWindow(
+            title: 'Pick up location', snippet: 'Marker Snippet'),
+        icon: await pickUpIcon,
+      ),
+    );
+    if (widget.dropExtralatlong != null) {
+      markers.add(
+        Marker(
+          markerId: const MarkerId('marker_3'),
+          draggable: false,
+          position: widget.dropExtralatlong!,
+          infoWindow: const InfoWindow(
+            title: 'Secondary Drop Location',
+            snippet: 'Marker Snippet',
+          ),
+          icon: await dropIcon,
+        ),
+      );
+    }
+    markers.add(
+      Marker(
+        markerId: const MarkerId('marker_1'),
+        draggable: false,
+        position: widget.droplatlong,
+        infoWindow: const InfoWindow(
+          title: 'Drop Location',
+          snippet: 'Marker Snippet',
+        ),
+        icon: await dropIcon,
+      ),
+    );
+
+    setState(() {});
   }
 
   TextEditingController notecontroller = TextEditingController();
@@ -55,10 +103,9 @@ class _SelectRiderState extends State<SelectRider> {
       body: BlocListener<BookrideBloc, BookrideState>(
         listener: (context, state) {
           if (state is BookRideLoading) {
-            Loader.show(context,
-                progressIndicator: CircularProgressIndicator(
-                  color: AppColors.appColor,
-                ));
+            Loader.show(
+              context,
+            );
           } else if (state is BookRideFail) {
             Loader.hide();
             context.showSnackBar(context, msg: state.error);
@@ -75,7 +122,9 @@ class _SelectRiderState extends State<SelectRider> {
             );
           } else if (state is TokenExpired) {
             Loader.hide();
-            context.showSnackBar(context, msg: "Token Expired");
+            AppRepository().tokenExpired();
+            context.showSnackBar(context,
+                msg: "Token Expired.Please try again");
           }
         },
         child: SafeArea(
@@ -85,35 +134,7 @@ class _SelectRiderState extends State<SelectRider> {
                 polylines: widget.polylines,
                 zoomGesturesEnabled: true,
                 zoomControlsEnabled: false,
-                markers: <Marker>{
-                  Marker(
-                    markerId: const MarkerId('marker_1'),
-                    draggable: false,
-                    position: LatLng(
-                      widget.droplatlong.latitude,
-                      widget.droplatlong.longitude,
-                    ),
-                    infoWindow: const InfoWindow(
-                      title: 'Marker Title',
-                      snippet: 'Marker Snippet',
-                    ),
-                    icon: BitmapDescriptor.defaultMarkerWithHue(
-                      BitmapDescriptor.hueRed,
-                    ),
-                  ),
-                  Marker(
-                    markerId: const MarkerId('marker_2'),
-                    draggable: false,
-                    position: LatLng(
-                      widget.pickuplatlong.latitude,
-                      widget.pickuplatlong.longitude,
-                    ),
-                    infoWindow: const InfoWindow(
-                        title: 'Marker Title', snippet: 'Marker Snippet'),
-                    icon: BitmapDescriptor.defaultMarkerWithHue(
-                        BitmapDescriptor.hueRed),
-                  ),
-                },
+                markers: markers,
                 gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
                   Factory<OneSequenceGestureRecognizer>(
                     () => EagerGestureRecognizer(),
@@ -126,7 +147,7 @@ class _SelectRiderState extends State<SelectRider> {
                         widget.pickuplatlong.latitude,
                         widget.pickuplatlong.longitude,
                       ),
-                      15,
+                      8,
                     ),
                   );
                 },
@@ -135,27 +156,30 @@ class _SelectRiderState extends State<SelectRider> {
                     widget.pickuplatlong.latitude,
                     widget.pickuplatlong.longitude,
                   ),
-                  zoom: 15.0,
+                  zoom: 8.0,
                 ),
               ),
-              Container(
-                height: 40.h,
-                width: 40.w,
-                margin: EdgeInsets.only(
-                  top: 10.h,
-                  left: 8.w,
-                ),
-                child: Center(
-                  child: Icon(
-                    Icons.arrow_back,
-                    color: AppColors.black,
-                  ),
-                ),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
-                ),
-              ),
+              // Container(
+              //   height: 40.h,
+              //   width: 40.w,
+              //   margin: EdgeInsets.only(
+              //     top: 10.h,
+              //     left: 8.w,
+              //   ),
+              //   child: Center(
+              //     child: GestureDetector(
+              //       onTap: ()=>,
+              //       child: Icon(
+              //         Icons.arrow_back,
+              //         color: AppColors.black,
+              //       ),
+              //     ),
+              //   ),
+              //   decoration: BoxDecoration(
+              //     shape: BoxShape.circle,
+              //     color: Colors.white,
+              //   ),
+              // ),
               Align(
                 alignment: Alignment.bottomCenter,
                 child: Container(

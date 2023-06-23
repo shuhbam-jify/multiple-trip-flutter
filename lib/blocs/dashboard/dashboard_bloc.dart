@@ -29,12 +29,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
             accesstoken: prefs.getString(Strings.accesstoken)!,
           )
               .then((value) {
-            if (value?['code'] == null) {
-              add.call(FetchDashboardData(
-                  fulladdress: event.fulladdress, latLng: event.latLng));
-              return;
-            }
-            if (value?["code"] == 200) {
+            if (value['code'] != null && value?["code"] == 200) {
               var _dashboard = Dashboard.fromJson(value);
               emit.call(
                 DashboardLoaded(

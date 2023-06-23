@@ -56,58 +56,53 @@ class _SplashScreenState extends State<SplashScreen> {
           body: ListView(
             children: [
               SplashBackground(),
-              Padding(
-                padding: EdgeInsets.all(
-                  16,
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    sizedBoxWithHeight(40),
-                    Text(
-                      "Welcome To First Choice\nDesignated Drivers",
-                      textAlign: TextAlign.center,
-                      style: AppText.text28w500.copyWith(
-                        color: AppColors.black,
-                      ),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  sizedBoxWithHeight(40),
+                  Text(
+                    "Welcome To First Choice\nDesignated Drivers",
+                    textAlign: TextAlign.center,
+                    style: AppText.text28w500.copyWith(
+                      color: AppColors.black,
                     ),
-                    sizedBoxWithHeight(80),
-                    BlocBuilder<TokenBloc, TokenState>(
-                      builder: (context, state) {
-                        if (state is TokenFaied || state is TokenInitial) {
-                          return InkWell(
-                            onTap: () {
-                              isLoggedIn(
-                                context: context,
-                              );
-                            },
-                            child: Container(
-                              width: double.infinity,
-                              child: Center(
-                                child: Text(
-                                  "Get Started",
-                                  style: AppText.text15w400.copyWith(
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                              padding: EdgeInsets.symmetric(
-                                vertical: 16.h,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.green,
-                                borderRadius: BorderRadius.circular(
-                                  10.r,
+                  ),
+                  sizedBoxWithHeight(60),
+                  BlocBuilder<TokenBloc, TokenState>(
+                    builder: (context, state) {
+                      if (state is TokenFaied || state is TokenInitial) {
+                        return InkWell(
+                          onTap: () {
+                            isLoggedIn(
+                              context: context,
+                            );
+                          },
+                          child: Container(
+                            width: double.infinity,
+                            child: Center(
+                              child: Text(
+                                "Get Started",
+                                style: AppText.text15w400.copyWith(
+                                  color: Colors.white,
                                 ),
                               ),
                             ),
-                          );
-                        }
-                        return SizedBox();
-                      },
-                    )
-                  ],
-                ),
+                            padding: EdgeInsets.symmetric(
+                              vertical: 16.h,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.green,
+                              borderRadius: BorderRadius.circular(
+                                10.r,
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+                      return SizedBox();
+                    },
+                  )
+                ],
               ),
             ],
           )),

@@ -8,6 +8,7 @@ import 'package:multitrip_user/app_enverionment.dart';
 import 'package:multitrip_user/features/book_ride/under_the_ride.dart';
 import 'package:multitrip_user/shared/shared.dart';
 import 'package:multitrip_user/shared/ui/common/app_image.dart';
+import 'package:multitrip_user/shared/ui/common/icon_map.dart';
 import 'package:multitrip_user/shared/ui/common/spacing.dart';
 
 import '../../themes/app_text.dart';
@@ -15,11 +16,13 @@ import '../../themes/app_text.dart';
 class BookingOTP extends StatefulWidget {
   final LatLng pickuplatlong;
   final LatLng droplatlong;
+  final LatLng? dropExtralatlong;
   final Set<Polyline> polylines;
   const BookingOTP({
     required this.polylines,
     required this.droplatlong,
     required this.pickuplatlong,
+    this.dropExtralatlong,
     super.key,
   });
 
@@ -28,9 +31,61 @@ class BookingOTP extends StatefulWidget {
 }
 
 class _BookingOTPState extends State<BookingOTP> {
+  Set<Marker> markers = {};
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    initMarkers();
+  }
+
   @override
   void dispose() {
     super.dispose();
+  }
+
+  initMarkers() async {
+    markers = {};
+
+    markers.add(
+      Marker(
+        markerId: const MarkerId('marker_2'),
+        draggable: false,
+        position: widget.pickuplatlong,
+        infoWindow: const InfoWindow(
+            title: 'Pick up location', snippet: 'Marker Snippet'),
+        icon: await pickUpIcon,
+      ),
+    );
+    if (widget.dropExtralatlong != null) {
+      markers.add(
+        Marker(
+          markerId: const MarkerId('marker_3'),
+          draggable: false,
+          position: widget.dropExtralatlong!,
+          infoWindow: const InfoWindow(
+            title: 'Secondary Drop Location',
+            snippet: 'Marker Snippet',
+          ),
+          icon: await dropIcon,
+        ),
+      );
+    }
+    markers.add(
+      Marker(
+        markerId: const MarkerId('marker_1'),
+        draggable: false,
+        position: widget.droplatlong,
+        infoWindow: const InfoWindow(
+          title: 'Drop Location',
+          snippet: 'Marker Snippet',
+        ),
+        icon: await dropIcon,
+      ),
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      setState(() {});
+    });
   }
 
   @override
@@ -43,35 +98,7 @@ class _BookingOTPState extends State<BookingOTP> {
               polylines: widget.polylines,
               zoomGesturesEnabled: true,
               zoomControlsEnabled: false,
-              markers: <Marker>{
-                Marker(
-                  markerId: const MarkerId('marker_1'),
-                  draggable: false,
-                  position: LatLng(
-                    widget.droplatlong.latitude,
-                    widget.droplatlong.longitude,
-                  ),
-                  infoWindow: const InfoWindow(
-                    title: 'Marker Title',
-                    snippet: 'Marker Snippet',
-                  ),
-                  icon: BitmapDescriptor.defaultMarkerWithHue(
-                    BitmapDescriptor.hueRed,
-                  ),
-                ),
-                Marker(
-                  markerId: const MarkerId('marker_2'),
-                  draggable: false,
-                  position: LatLng(
-                    widget.pickuplatlong.latitude,
-                    widget.pickuplatlong.longitude,
-                  ),
-                  infoWindow: const InfoWindow(
-                      title: 'Marker Title', snippet: 'Marker Snippet'),
-                  icon: BitmapDescriptor.defaultMarkerWithHue(
-                      BitmapDescriptor.hueRed),
-                ),
-              },
+              markers: markers,
               gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
                 Factory<OneSequenceGestureRecognizer>(
                   () => EagerGestureRecognizer(),

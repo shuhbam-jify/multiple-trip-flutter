@@ -24,6 +24,11 @@ class ConfirmrideBloc extends Bloc<ConfirmrideEvent, ConfirmrideState> {
             userid: prefs.getString(Strings.userid)!,
           )
               .then((value) {
+            if (value['code'] == null) {
+              emit.call(ConfirmFail(
+                  error:
+                      'Invalid requested location. Please reselect the locations '));
+            }
             if (value["code"] == 200) {
               var _confirmRide = ConfirmRide.fromJson(value);
               emit.call(
@@ -38,7 +43,9 @@ class ConfirmrideBloc extends Bloc<ConfirmrideEvent, ConfirmrideState> {
             }
           });
         } catch (e) {
-          emit.call(ConfirmFail(error: e.toString()));
+          emit.call(ConfirmFail(
+              error:
+                  'Invalid requested location. Please reselect the locations'));
         }
       }
     });

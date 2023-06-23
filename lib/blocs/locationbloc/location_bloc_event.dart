@@ -17,6 +17,11 @@ class FetchDropLatlong extends LocationBlocEvent {
   FetchDropLatlong({required this.placeId});
 }
 
+class FetchSecondDropLatlong extends LocationBlocEvent {
+  final String placeId;
+  FetchSecondDropLatlong({required this.placeId});
+}
+
 class FetchPickupLatLong extends LocationBlocEvent {
   final String placeId;
   FetchPickupLatLong({

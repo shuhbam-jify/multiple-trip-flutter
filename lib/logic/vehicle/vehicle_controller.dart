@@ -59,7 +59,7 @@ class VehicleController extends ChangeNotifier {
   }
 
   Future<void> getvehicles({required BuildContext context}) async {
-    isloading = true;
+    // isloading = true;
     final SharedPreferences prefs = await SharedPreferences.getInstance();
 
     AppRepository()
@@ -72,6 +72,10 @@ class VehicleController extends ChangeNotifier {
       )!,
     )
         .then((value) {
+      if (value['code'] == null) {
+        // isloading = false;
+        Loader.hide();
+      }
       if (value["code"] == 200) {
         _vehicles = Vehicles.fromJson(
           value,

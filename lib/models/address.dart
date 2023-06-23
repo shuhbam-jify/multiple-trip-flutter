@@ -60,5 +60,6 @@ class AddressElement {
         "address_line_2": addressLine2,
         "latitude": latitude,
         "longitude": longitude,
+        "place_id": placeId
       };
 }

@@ -9,8 +9,10 @@ class AppImage extends StatelessWidget {
   final double? width;
   final double? height;
   final Color? color;
+  final BoxFit? fit;
 
-  const AppImage(this.image, {this.width, this.height, super.key, this.color});
+  const AppImage(this.image,
+      {this.width, this.height, super.key, this.color, this.fit});
 
   @override
   Widget build(BuildContext context) {
@@ -33,10 +35,11 @@ class AppImage extends StatelessWidget {
         height: height,
       );
     }
-    return _showAssetImage(image, height: height, width: width);
+    return _showAssetImage(image, height: height, width: width, fit: fit);
   }
 
-  Widget _showNetworkImage(String image, {double? width, double? height}) {
+  Widget _showNetworkImage(String image,
+      {double? width, double? height, BoxFit? fit}) {
     if (image.contains('.svg')) {
       return SvgPicture.network(
         image,
@@ -53,7 +56,8 @@ class AppImage extends StatelessWidget {
     );
   }
 
-  Widget _showAssetImage(String image, {double? width, double? height}) {
+  Widget _showAssetImage(String image,
+      {double? width, double? height, BoxFit? fit}) {
     if (image.contains('.svg')) {
       return SvgPicture.asset(
         image,
@@ -68,6 +72,7 @@ class AppImage extends StatelessWidget {
       width: width,
       height: height,
       color: color,
+      fit: fit,
     );
   }
 }

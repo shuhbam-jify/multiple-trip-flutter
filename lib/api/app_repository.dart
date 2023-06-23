@@ -1,5 +1,8 @@
 import 'package:multitrip_user/api/api_base_helper.dart';
+import 'package:multitrip_user/models/accesstoken.dart';
 import 'package:multitrip_user/models/address.dart';
+import 'package:multitrip_user/shared/shared.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AppRepository {
   ApiBaseHelper helper = ApiBaseHelper();
@@ -336,6 +339,128 @@ class AppRepository {
     final response = await helper.post(
       "book_ride",
       body,
+      {
+        "access_token": accesstoken,
+      },
+    );
+
+    return response;
+  }
+
+  Future<void> tokenExpired() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    await getaccesstoken(
+      refreshtoken: prefs.getString(Strings.refreshtoken)!,
+    ).then((value) async {
+      if (value == null || value['code'] == null) {}
+
+      if (value["code"] == 200) {
+        var accessToken = AccessToken.fromJson(value);
+
+        await prefs.setString(Strings.accesstoken, accessToken.accessToken);
+      }
+    });
+    //  context.showSnackBar(context, msg: value["message"]);
+  }
+
+  // Verify OTP
+  Future<dynamic> getProfile({
+    required String user_id,
+    required String accesstoken,
+  }) async {
+    final response = await helper.post(
+      "customer_profile",
+      {
+        "user_id": user_id,
+      },
+      {
+        "access_token": accesstoken,
+      },
+    );
+
+    return response;
+  }
+
+  Future<dynamic> updateEmailProfile({
+    required String user_id,
+    required String accesstoken,
+    required String email,
+  }) async {
+    final response = await helper.post(
+      "update_customer_email",
+      {"user_id": user_id, "email": email},
+      {
+        "access_token": accesstoken,
+      },
+    );
+
+    return response;
+  }
+
+  Future<dynamic> updateMobileProfile({
+    required String user_id,
+    required String accesstoken,
+    required String mobile_number,
+  }) async {
+    final response = await helper.post(
+      "update_customer_mobile",
+      {"user_id": user_id, "mobile_number": mobile_number},
+      {
+        "access_token": accesstoken,
+      },
+    );
+
+    return response;
+  }
+
+  Future<dynamic> updateNameProfile({
+    required String user_id,
+    required String accesstoken,
+    required String first_name,
+    required String last_name,
+  }) async {
+    final response = await helper.post(
+      "update_customer_name",
+      {"user_id": user_id, "first_name": first_name, "last_name": last_name},
+      {
+        "access_token": accesstoken,
+      },
+    );
+
+    return response;
+  }
+
+  Future<dynamic> changePassword({
+    required String user_id,
+    required String accesstoken,
+    required String password,
+  }) async {
+    final response = await helper.post(
+      "change_password",
+      {
+        "user_id": user_id,
+        "new_password": password,
+      },
+      {
+        "access_token": accesstoken,
+      },
+    );
+
+    return response;
+  }
+
+  Future<dynamic> uploadImage({
+    required String user_id,
+    required String accesstoken,
+    required String path,
+  }) async {
+    final response = await helper.uploadImage(
+      "update_customer_image",
+      {
+        "user_id": user_id,
+      },
+      path,
       {
         "access_token": accesstoken,
       },

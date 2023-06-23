@@ -10,6 +10,7 @@ import 'package:flutter_overlay_loader/flutter_overlay_loader.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:multitrip_user/api/app_repository.dart';
 import 'package:multitrip_user/blocs/address/address_bloc.dart' as address;
 import 'package:multitrip_user/blocs/confirmride/confirmride_bloc.dart';
 import 'package:multitrip_user/blocs/member/member_bloc.dart';
@@ -30,11 +31,13 @@ class PickupDropAddress extends StatefulWidget {
   final String pickupaddess;
   final double lat;
   final double long;
+  final AddressElement? dropLocation;
   const PickupDropAddress({
     super.key,
     required this.pickupaddess,
     required this.lat,
     required this.long,
+    this.dropLocation,
   });
 
   @override
@@ -47,6 +50,8 @@ class _PickupDropAddressState extends State<PickupDropAddress> {
   Position? position;
   double dividerHeight = 50.h;
   bool pickenabled = true;
+  bool extraFieldEnabled = false;
+
   bool dropenable = false;
 
   int currentTextField = 0;
@@ -60,7 +65,8 @@ class _PickupDropAddressState extends State<PickupDropAddress> {
   MemberBloc memberBloc = MemberBloc();
 
   late LatLng pickuplatlong;
-  late LatLng droplatlong;
+  LatLng? droplatlong;
+  LatLng? extraDropLatLong;
   final textFields = <Widget>[];
 
   @override
@@ -73,6 +79,16 @@ class _PickupDropAddressState extends State<PickupDropAddress> {
     super.initState();
     _addTextFields();
     BlocProvider.of<address.AddressBloc>(context).add(address.FetchAddress());
+    if (widget.dropLocation != null && widget.dropLocation?.placeId != null) {
+      dropController.text = widget.dropLocation!.addressLine2;
+
+      dropController.selection =
+          TextSelection.collapsed(offset: dropController.text.length);
+
+      locationBlocBloc.add(
+        FetchDropLatlong(placeId: widget.dropLocation!.placeId!),
+      );
+    }
   }
 
   Future<void> fetchlocation() async {
@@ -98,6 +114,7 @@ class _PickupDropAddressState extends State<PickupDropAddress> {
               return Visibility(
                 visible: val,
                 child: Container(
+                  width: 270.w,
                   margin: const EdgeInsets.only(bottom: 10, top: 10),
                   child: Row(
                     children: [
@@ -106,7 +123,13 @@ class _PickupDropAddressState extends State<PickupDropAddress> {
                           color: Colors.grey.shade300,
                           child: TextFormField(
                             controller: _controller,
-                            onTap: () {},
+                            onTap: () {
+                              setState(() {
+                                pickenabled = false;
+                                dropenable = false;
+                                extraFieldEnabled = true;
+                              });
+                            },
                             onChanged: (value) {
                               BlocProvider.of<LocationBlocBloc>(context).add(
                                 FetchSuggestions(query: value),
@@ -146,13 +169,10 @@ class _PickupDropAddressState extends State<PickupDropAddress> {
                             dividerHeight -= 50.h;
                           });
                         },
-                        child: SizedBox(
-                          height: 30.h,
-                          width: 30.w,
-                          child: Icon(
-                            Icons.close,
-                            color: AppColors.black,
-                          ),
+                        child: Icon(
+                          Icons.close,
+                          color: AppColors.black,
+                          size: 18.r,
                         ),
                       )
                     ],
@@ -172,6 +192,7 @@ class _PickupDropAddressState extends State<PickupDropAddress> {
                     setState(() {
                       pickenabled = false;
                       dropenable = true;
+                      extraFieldEnabled = false;
                     });
                     if (pickupController.text == "") {
                       setState(() {
@@ -202,11 +223,24 @@ class _PickupDropAddressState extends State<PickupDropAddress> {
                 ),
               ),
             ),
-            AppImage(
-              "assets/sort.svg",
-              height: 32.h,
-              width: 48.w,
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: AppImage(
+                "assets/sort.svg",
+                height: 32.h,
+                width: 48.w,
+              ),
             ),
+            ValueListenableBuilder(
+                valueListenable: isExtraTextfieldVisible,
+                builder: (context, snapshot, __) {
+                  if (snapshot) {
+                    return SizedBox(
+                      width: 24.w,
+                    );
+                  }
+                  return SizedBox();
+                })
           ],
         ),
       ],
@@ -229,56 +263,71 @@ class _PickupDropAddressState extends State<PickupDropAddress> {
           }
           return Scaffold(
             resizeToAvoidBottomInset: false,
-            bottomNavigationBar: Visibility(
-              visible: ismapvisible,
-              child: GestureDetector(
-                onTap: () {
-                  if (pickupController.text.isEmpty) {
-                    context.showSnackBar(context,
-                        msg: "Please Add Pickup Address");
-                  } else if (dropController.text.isEmpty) {
-                    context.showSnackBar(context,
-                        msg: "Please Add Drop Address");
-                  } else {
-                    BlocProvider.of<ConfirmrideBloc>(context).add(
-                      DoConfirmRide(
-                          droplocation: jsonEncode(
-                            [
-                              {
-                                "lat": droplatlong.latitude.toString(),
-                                "long": droplatlong.longitude.toString(),
-                                "address": dropController.text
-                              },
-                            ],
-                          ),
-                          pickuplocation: jsonEncode(
-                            {
-                              "lat": pickuplatlong.latitude.toString(),
-                              "long": pickuplatlong.longitude.toString(),
-                              "address": pickupController.text
-                            },
-                          )),
-                    );
-                  }
-                },
-                child: Container(
-                  height: 50.h,
-                  margin:
-                      EdgeInsets.symmetric(vertical: 10.h, horizontal: 16.w),
-                  padding: EdgeInsets.symmetric(
-                    vertical: 15.h,
+            bottomNavigationBar: GestureDetector(
+              onTap: () {
+                if (pickupController.text.isEmpty && pickuplatlong == null) {
+                  context.showSnackBar(context,
+                      msg: "Please Add or change Pickup Address");
+                  return;
+                }
+                if (dropController.text.isEmpty && droplatlong == null) {
+                  context.showSnackBar(context,
+                      msg: "Please Add or change Drop Address");
+                  return;
+                }
+
+                if (isExtraTextfieldVisible.value && _controller.text.isEmpty) {
+                  context.showSnackBar(context,
+                      msg: "Please Add or change Additional Drop Address");
+                  return;
+                }
+                var mapList = [];
+                if (droplatlong != null) {
+                  mapList.add(
+                    {
+                      "lat": droplatlong?.latitude.toString(),
+                      "long": droplatlong?.longitude.toString(),
+                      "address": dropController.text
+                    },
+                  );
+                }
+                if (extraDropLatLong != null) {
+                  mapList.add({
+                    "lat": extraDropLatLong?.latitude.toString(),
+                    "long": extraDropLatLong?.longitude.toString(),
+                    "address": _controller.text
+                  });
+                }
+
+                BlocProvider.of<ConfirmrideBloc>(context).add(
+                  DoConfirmRide(
+                      droplocation: jsonEncode(mapList),
+                      pickuplocation: jsonEncode(
+                        {
+                          "lat": pickuplatlong.latitude.toString(),
+                          "long": pickuplatlong.longitude.toString(),
+                          "address": pickupController.text
+                        },
+                      )),
+                );
+                locationBlocBloc.add(InitBloc());
+              },
+              child: Container(
+                height: 50.h,
+                margin: EdgeInsets.symmetric(vertical: 10.h, horizontal: 16.w),
+                padding: EdgeInsets.symmetric(
+                  vertical: 15.h,
+                ),
+                child: Center(
+                  child: Text(
+                    "Done",
+                    style: AppText.text15Normal.copyWith(color: Colors.white),
                   ),
-                  child: Center(
-                    child: Text(
-                      "Done",
-                      style: AppText.text15Normal.copyWith(color: Colors.white),
-                    ),
-                  ),
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: AppColors.green,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                ),
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: AppColors.green,
+                  borderRadius: BorderRadius.circular(10),
                 ),
               ),
             ),
@@ -306,16 +355,20 @@ class _PickupDropAddressState extends State<PickupDropAddress> {
                           Loader.show(context);
                         } else if (state is ConfirmLoaded) {
                           Loader.hide();
+                          if (droplatlong == null) {
+                            return;
+                          }
                           Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (context) => VehicleList(
-                                droplat: droplatlong.latitude,
+                                droplat: droplatlong!.latitude,
                                 amount: state.confirmRide.amount,
                                 bookingid:
                                     state.confirmRide.bookingNumber.toString(),
-                                droplong: droplatlong.longitude,
+                                droplong: droplatlong!.longitude,
                                 pickuplat: pickuplatlong.latitude,
                                 pickuplong: pickuplatlong.longitude,
+                                extraDropLatLng: extraDropLatLong,
                               ),
                             ),
                           );
@@ -327,7 +380,8 @@ class _PickupDropAddressState extends State<PickupDropAddress> {
                           );
                         } else if (state is TokenExpired) {
                           Loader.hide();
-                          context.showSnackBar(context, msg: "Token Expired");
+                          // context.showSnackBar(context, msg: "Token Expired");
+                          AppRepository().tokenExpired();
                           context
                               .read<TokenBloc>()
                               .add(FetchAccessToken(context: context));
@@ -384,51 +438,38 @@ class _PickupDropAddressState extends State<PickupDropAddress> {
           ),
           Flexible(
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Container(
-                        color: Colors.grey.shade300,
-                        child: TextFormField(
-                          controller: pickupController,
-                          onTap: () {
-                            locationBlocBloc.add(ClearSuggestionList());
-                            setState(() {
-                              pickenabled = true;
-                              dropenable = false;
-                            });
-                          },
-                          onChanged: (value) {
-                            BlocProvider.of<LocationBlocBloc>(context).add(
-                              FetchSuggestions(query: value),
-                            );
-                          },
-                          cursorColor: AppColors.grey500,
-                          decoration: InputDecoration(
-                            hintText: "Enter Pickup location",
-                            hintStyle: AppText.text14w400.copyWith(
-                              fontSize: 14.sp,
-                              color: AppColors.grey500,
-                            ),
-                            contentPadding: EdgeInsets.symmetric(vertical: 15) +
-                                EdgeInsets.only(
-                                  left: 10.w,
-                                ),
-                            border: InputBorder.none,
-                          ),
-                        ),
+                Container(
+                  width: 276.w,
+                  color: Colors.grey.shade300,
+                  child: TextFormField(
+                    controller: pickupController,
+                    onTap: () {
+                      locationBlocBloc.add(ClearSuggestionList());
+                      setState(() {
+                        pickenabled = true;
+                        dropenable = false;
+                        extraFieldEnabled = false;
+                      });
+                    },
+                    onChanged: (value) {
+                      BlocProvider.of<LocationBlocBloc>(context).add(
+                        FetchSuggestions(query: value),
+                      );
+                    },
+                    cursorColor: AppColors.grey500,
+                    decoration: InputDecoration(
+                      hintText: "Enter Pickup location",
+                      hintStyle: AppText.text14w400.copyWith(
+                        fontSize: 12.sp,
+                        color: AppColors.grey500,
                       ),
+                      contentPadding: EdgeInsets.all(8.w),
+                      border: InputBorder.none,
                     ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: AppImage(
-                        "assets/sort.svg",
-                        height: 32.h,
-                        width: 48.w,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
                 sizedBoxWithHeight(10),
                 ReorderableListView(
@@ -506,7 +547,7 @@ class _PickupDropAddressState extends State<PickupDropAddress> {
         BlocListener<MemberBloc, MemberState>(
           listener: (context, state) async {
             if (state is MemberLoading) {
-              Loader.show(context);
+              // Loader.show(context);
             } else if (state is MembersFail) {
               context.showSnackBar(context, msg: state.error);
               Loader.hide();
@@ -567,10 +608,6 @@ class _PickupDropAddressState extends State<PickupDropAddress> {
           ? SingleChildScrollView(
               child: Column(
                 children: [
-                  Divider(
-                    thickness: 1,
-                    color: AppColors.greydark,
-                  ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
@@ -635,7 +672,30 @@ class _PickupDropAddressState extends State<PickupDropAddress> {
                                                                 .placeId ??
                                                             ''),
                                                   );
-                                                } else if (dropenable) {
+                                                  return;
+                                                }
+                                                if (extraFieldEnabled) {
+                                                  _controller.text = state
+                                                      .address
+                                                      .address[index]
+                                                      .addressLine2;
+
+                                                  _controller.selection =
+                                                      TextSelection.collapsed(
+                                                          offset: _controller
+                                                              .text.length);
+
+                                                  locationBlocBloc.add(
+                                                    FetchSecondDropLatlong(
+                                                        placeId: state
+                                                                .address
+                                                                .address[index]
+                                                                .placeId ??
+                                                            ''),
+                                                  );
+                                                  return;
+                                                }
+                                                if (dropenable) {
                                                   dropController.text = state
                                                       .address
                                                       .address[index]
@@ -654,14 +714,6 @@ class _PickupDropAddressState extends State<PickupDropAddress> {
                                                                 .placeId ??
                                                             ''),
                                                   );
-                                                } else {
-                                                  // _controllers
-                                                  //         .elementAt(currentTextField)
-                                                  //         .text =
-                                                  //     state.predictions
-                                                  //         .elementAt(index)
-                                                  //         .structuredFormatting
-                                                  //         .secondaryText;
                                                 }
                                               },
                                               child: Row(
@@ -730,10 +782,6 @@ class _PickupDropAddressState extends State<PickupDropAddress> {
                       ),
                     ],
                   ),
-                  Divider(
-                    thickness: 1,
-                    color: AppColors.greydark,
-                  ),
                   sizedBoxWithHeight(10),
                   BlocListener<address.AddressBloc, address.AddressState>(
                     listener: (context, state) {
@@ -797,7 +845,23 @@ class _PickupDropAddressState extends State<PickupDropAddress> {
                                               .elementAt(index)
                                               .placeId),
                                     );
-                                  } else {
+                                  } else if (isExtraTextfieldVisible.value) {
+                                    _controller.text = state.predictions
+                                        .elementAt(index)
+                                        .structuredFormatting
+                                        .secondaryText;
+
+                                    _controller.selection =
+                                        TextSelection.collapsed(
+                                            offset: _controller.text.length);
+
+                                    locationBlocBloc.add(
+                                      FetchSecondDropLatlong(
+                                          placeId: state.predictions
+                                              .elementAt(index)
+                                              .placeId),
+                                    );
+
                                     // _controllers
                                     //         .elementAt(currentTextField)
                                     //         .text =
@@ -805,7 +869,7 @@ class _PickupDropAddressState extends State<PickupDropAddress> {
                                     //         .elementAt(index)
                                     //         .structuredFormatting
                                     //         .secondaryText;
-                                  }
+                                  } else {}
                                 },
                                 child: Row(
                                   mainAxisAlignment:
@@ -906,46 +970,31 @@ class _PickupDropAddressState extends State<PickupDropAddress> {
                         if (state is SuggestionsLoading) {
                           //     Loader.show(context);
                         } else if (state is DropLatLongLoading) {
-                          Loader.show(context);
-                        } else if (state is DropLatLongLoaded) {
+                          // Loader.show(context);
+                        } else if (state is DropLatLongLoaded ||
+                            state is DropSecondaryLatLongLoaded) {
                           Loader.hide();
 
-                          droplatlong = state.latLng;
-                          SchedulerBinding.instance.addPostFrameCallback(
-                            (timeStamp) {
-                              BlocProvider.of<ConfirmrideBloc>(context).add(
-                                DoConfirmRide(
-                                    droplocation: jsonEncode(
-                                      [
-                                        {
-                                          "lat":
-                                              state.latLng.latitude.toString(),
-                                          "long":
-                                              state.latLng.longitude.toString(),
-                                          "address": dropController.text
-                                        },
-                                      ],
-                                    ),
-                                    pickuplocation: jsonEncode(
-                                      {
-                                        "lat":
-                                            pickuplatlong.latitude.toString(),
-                                        "long":
-                                            pickuplatlong.longitude.toString(),
-                                        "address": pickupController.text
-                                      },
-                                    )),
-                              );
-                            },
-                          );
-                          locationBlocBloc.add(InitBloc());
+                          var mapList = [];
+                          if (state is DropLatLongLoaded) {
+                            droplatlong = state.latLng;
+                            mapList.add({
+                              "lat": state.latLng.latitude.toString(),
+                              "long": state.latLng.longitude.toString(),
+                              "address": dropController.text
+                            });
+                          }
+                          if (state is DropSecondaryLatLongLoaded) {
+                            extraDropLatLong = state.latLng;
+                            mapList.add({
+                              "lat": state.latLng.latitude.toString(),
+                              "long": state.latLng.longitude.toString(),
+                              "address": _controller.text
+                            });
+                          }
                         }
                       },
                     ),
-                  ),
-                  Divider(
-                    thickness: 0.6,
-                    color: AppColors.greylight,
                   ),
                   sizedBoxWithHeight(10),
                   GestureDetector(
@@ -1055,6 +1104,14 @@ class _PickupDropAddressState extends State<PickupDropAddress> {
                                       TextSelection.collapsed(
                                     offset: pickupController.text.length,
                                   );
+                                } else if (extraFieldEnabled) {
+                                  extraDropLatLong = LatLng(lat, lon);
+
+                                  _controller.text = _fullAddress;
+
+                                  _controller.selection =
+                                      TextSelection.collapsed(
+                                          offset: _controller.text.length);
                                 } else if (dropenable) {
                                   droplatlong = LatLng(lat, lon);
 

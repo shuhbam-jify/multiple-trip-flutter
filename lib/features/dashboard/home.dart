@@ -11,6 +11,7 @@ import 'package:get/get_state_manager/get_state_manager.dart';
 import 'package:get/state_manager.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:multitrip_user/app_enverionment.dart';
+import 'package:multitrip_user/blocs/account/account_controller.dart';
 import 'package:multitrip_user/blocs/address/address_bloc.dart' as ad;
 import 'package:multitrip_user/blocs/dashboard/dashboard_bloc.dart';
 import 'package:multitrip_user/blocs/token/token_bloc.dart';
@@ -23,6 +24,7 @@ import 'package:multitrip_user/shared/ui/common/app_image.dart';
 import 'package:multitrip_user/shared/ui/common/spacing.dart';
 import 'package:multitrip_user/themes/app_text.dart';
 import 'package:multitrip_user/widgets/app_google_map.dart';
+import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
   final GlobalKey<ScaffoldState>? parentScaffoldKey;
@@ -149,6 +151,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
     addressBloc.add(ad.FetchAddress());
     fetchlocatiocation().onError((error, stackTrace) => {errorPermssionWidget});
+    Provider.of<AccountController>(context, listen: false)
+        .getPofileData(isEnableLoading: false);
   }
 
   @override
@@ -168,8 +172,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _renderbody() {
-    return HomeScreenData(
-      dashboardBloc: dashboardBloc,
+    return RefreshIndicator(
+      onRefresh: () async {
+        addressBloc.add(ad.FetchAddress());
+        fetchlocatiocation()
+            .onError((error, stackTrace) => {errorPermssionWidget});
+      },
+      child: HomeScreenData(
+        dashboardBloc: dashboardBloc,
+      ),
     );
   }
 }
@@ -501,53 +512,70 @@ class _HomeScreenDataState extends State<HomeScreenData> {
                 primary: false,
                 itemCount: state.address.address.length,
                 itemBuilder: (context, index) {
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        height: 50.h,
-                        width: 50.w,
-                        child: Icon(
-                          Icons.location_on_sharp,
+                  return GestureDetector(
+                    onTap: () {
+                      final dbBoard = context.read<DashboardBloc>().state;
+                      if (dbBoard is DashboardLoaded) {
+                        AppEnvironment.navigator.push(MaterialPageRoute(
+                          builder: (context) => PickupDropAddress(
+                            lat: dbBoard.currentlocation.latitude,
+                            long: dbBoard.currentlocation.longitude,
+                            pickupaddess: dbBoard.fulladdeess,
+                            dropLocation: state.address.address[index],
+                          ),
+                        ));
+                      }
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          height: 50.h,
+                          width: 50.w,
+                          child: Icon(
+                            Icons.location_on_sharp,
+                            color: AppColors.black,
+                            size: 30,
+                          ),
+                          decoration: BoxDecoration(
+                              color: AppColors.greylight,
+                              shape: BoxShape.circle),
+                        ),
+                        sizedBoxWithWidth(10),
+                        Flexible(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Text(
+                                state.address.address
+                                    .elementAt(index)
+                                    .addressLine1,
+                                style: AppText.text16w400.copyWith(
+                                  color: AppColors.black,
+                                ),
+                              ),
+                              Text(
+                                state.address.address
+                                    .elementAt(index)
+                                    .addressLine2,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppText.text14w400.copyWith(
+                                  color: AppColors.grey500,
+                                  fontSize: 13.sp,
+                                ),
+                              )
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          Icons.arrow_forward_ios,
                           color: AppColors.black,
-                          size: 30,
-                        ),
-                        decoration: BoxDecoration(
-                            color: AppColors.greylight, shape: BoxShape.circle),
-                      ),
-                      sizedBoxWithWidth(10),
-                      Flexible(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              state.address.address
-                                  .elementAt(index)
-                                  .addressLine1,
-                              style: AppText.text16w400.copyWith(
-                                color: AppColors.black,
-                              ),
-                            ),
-                            Text(
-                              state.address.address
-                                  .elementAt(index)
-                                  .addressLine2,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: AppText.text14w400.copyWith(
-                                color: AppColors.grey500,
-                                fontSize: 13.sp,
-                              ),
-                            )
-                          ],
-                        ),
-                      ),
-                      Icon(
-                        Icons.arrow_forward_ios,
-                        color: AppColors.black,
-                        size: 15,
-                      )
-                    ],
+                          size: 15,
+                        )
+                      ],
+                    ),
                   );
                 },
                 separatorBuilder: (c, i) {
