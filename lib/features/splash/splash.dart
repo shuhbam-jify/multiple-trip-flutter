@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_overlay_loader/flutter_overlay_loader.dart';
 import 'package:multitrip_user/blocs/token/token_bloc.dart';
@@ -66,7 +67,9 @@ class _SplashScreenState extends State<SplashScreen> {
                     style: AppText.text28w500.copyWith(
                       color: AppColors.black,
                     ),
-                  ),
+                  ).animate().slideY(
+                        duration: const Duration(milliseconds: 500),
+                      ),
                   sizedBoxWithHeight(60),
                   BlocBuilder<TokenBloc, TokenState>(
                     builder: (context, state) {
@@ -96,7 +99,8 @@ class _SplashScreenState extends State<SplashScreen> {
                                 10.r,
                               ),
                             ),
-                          ),
+                          ).animate().fadeIn(
+                              duration: const Duration(milliseconds: 500)),
                         );
                       }
                       return SizedBox();

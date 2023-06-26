@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_overlay_loader/flutter_overlay_loader.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -383,7 +384,7 @@ class _VehicleListState extends State<VehicleList> {
                           return Divider();
                         },
                         itemCount: value.vehicles!.vehicles.length,
-                      );
+                      ).animate().slideX(duration: 400.ms);
                     }
                     return SizedBox();
                   },

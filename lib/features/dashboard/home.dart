@@ -1,6 +1,7 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_overlay_loader/flutter_overlay_loader.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
@@ -269,33 +270,39 @@ class _HomeScreenDataState extends State<HomeScreenData> {
                       SizedBox(
                         height: 130.h,
                         child: ListView.separated(
-                            padding: EdgeInsets.only(
-                              left: 20.w,
-                            ),
-                            scrollDirection: Axis.horizontal,
-                            shrinkWrap: true,
-                            itemBuilder: (context, index) {
-                              if (state.dashboard.topRatedDrivers[index].id ==
-                                  null) {
-                                return SizedBox();
-                              }
-                              return _driverview(
-                                  driverImage: state.dashboard
-                                          .topRatedDrivers[index].photo ??
-                                      '',
-                                  driverName: state.dashboard
-                                          .topRatedDrivers[index].fname ??
-                                      '',
-                                  driverRating: state.dashboard
-                                          .topRatedDrivers[index].rating ??
-                                      '0');
-                            },
-                            separatorBuilder: (context, index) {
-                              return SizedBox(
-                                width: 50.w,
-                              );
-                            },
-                            itemCount: state.dashboard.topRatedDrivers.length),
+                                padding: EdgeInsets.only(
+                                  left: 20.w,
+                                ),
+                                scrollDirection: Axis.horizontal,
+                                shrinkWrap: true,
+                                itemBuilder: (context, index) {
+                                  if (state.dashboard.topRatedDrivers[index]
+                                          .id ==
+                                      null) {
+                                    return SizedBox();
+                                  }
+                                  return _driverview(
+                                      driverImage: state.dashboard
+                                              .topRatedDrivers[index].photo ??
+                                          '',
+                                      driverName: state.dashboard
+                                              .topRatedDrivers[index].fname ??
+                                          '',
+                                      driverRating: state.dashboard
+                                              .topRatedDrivers[index].rating ??
+                                          '0');
+                                },
+                                separatorBuilder: (context, index) {
+                                  return SizedBox(
+                                    width: 50.w,
+                                  );
+                                },
+                                itemCount:
+                                    state.dashboard.topRatedDrivers.length)
+                            .animate()
+                            .fadeIn(duration: 300.ms)
+                            .then(delay: 00.ms) // baseline=800ms
+                            .scale(),
                       ),
                       Stack(
                         children: [

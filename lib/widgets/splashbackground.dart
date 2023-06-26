@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:multitrip_user/shared/shared.dart';
 import 'package:multitrip_user/shared/ui/common/app_image.dart';
 
@@ -25,7 +26,9 @@ class SplashBackground extends StatelessWidget {
                 height: 170.h,
                 width: 170.h,
                 fit: BoxFit.contain,
-              ),
+              ).animate().fade(
+                    duration: const Duration(milliseconds: 500),
+                  ),
             ))
       ],
     );

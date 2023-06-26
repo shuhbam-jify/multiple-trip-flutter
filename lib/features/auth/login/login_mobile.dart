@@ -5,6 +5,7 @@ import 'package:country_picker/country_picker.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_overlay_loader/flutter_overlay_loader.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -172,9 +173,13 @@ class _LoginMobileState extends State<LoginMobile> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text("Enter your mobile number",
-                          style: AppText.text22w500.copyWith(
-                            color: AppColors.black,
-                          )),
+                              style: AppText.text22w500.copyWith(
+                                color: AppColors.black,
+                              ))
+                          .animate()
+                          .moveX(
+                              curve: Curves.fastOutSlowIn,
+                              duration: Duration(milliseconds: 700)),
                       sizedBoxWithHeight(15),
                       Row(
                         children: [
@@ -262,7 +267,9 @@ class _LoginMobileState extends State<LoginMobile> {
                                 color: AppColors.mobilegrey),
                           ),
                         ],
-                      ),
+                      ).animate().scaleXY(
+                          curve: Curves.easeIn,
+                          duration: Duration(milliseconds: 700)),
                       sizedBoxWithHeight(8),
                       InkWell(
                         onTap: () {
@@ -297,7 +304,10 @@ class _LoginMobileState extends State<LoginMobile> {
                             ),
                           ],
                         ),
-                      ),
+                      ).animate().slideX(
+                          begin: 10,
+                          curve: Curves.easeIn,
+                          duration: Duration(milliseconds: 700)),
                       sizedBoxWithHeight(7),
                       Padding(
                         padding: EdgeInsets.only(
@@ -308,7 +318,11 @@ class _LoginMobileState extends State<LoginMobile> {
                             style: AppText.text15w400.copyWith(
                               color: AppColors.colorgrey,
                               fontSize: 13.sp,
-                            )),
+                            ))
+                          ..animate().scaleX(
+                              begin: 10,
+                              curve: Curves.easeIn,
+                              duration: Duration(milliseconds: 700)),
                       ),
                     ],
                   ),

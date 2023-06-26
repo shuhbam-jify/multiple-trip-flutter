@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_overlay_loader/flutter_overlay_loader.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -97,9 +98,13 @@ class _LoginPasswordState extends State<LoginPassword> {
                     ),
                   ),
                   Text("Welcome back, Signin to\ncontinue",
-                      style: AppText.text22w500.copyWith(
-                        color: AppColors.black,
-                      )),
+                          style: AppText.text22w500.copyWith(
+                            color: AppColors.black,
+                          ))
+                      .animate()
+                      .fadeIn(duration: 600.ms)
+                      .then(delay: 200.ms) // baseline=800ms
+                      .slide(),
                   sizedBoxWithHeight(80),
                   Container(
                     color: Colors.grey.shade300,
@@ -128,7 +133,11 @@ class _LoginPasswordState extends State<LoginPassword> {
                             width: 2,
                           ))),
                     ),
-                  ),
+                  )
+                      .animate()
+                      .flip(duration: 600.ms)
+                      .then(delay: 200.ms) // baseline=800ms
+                      .slide(),
                   SizedBox(
                     height: 20,
                   ),
@@ -140,6 +149,10 @@ class _LoginPasswordState extends State<LoginPassword> {
                       fontWeight: FontWeight.w700,
                     ),
                   )
+                      .animate()
+                      .fadeIn(duration: 600.ms)
+                      .then(delay: 200.ms) // baseline=800ms
+                      .slide()
                 ],
               ),
             ),
