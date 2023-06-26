@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_overlay_loader/flutter_overlay_loader.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -111,7 +112,10 @@ class _OtpLoginState extends State<OtpLogin> {
                     style: AppText.text22w500.copyWith(
                       color: AppColors.black,
                     ),
-                  ),
+                  ).animate()
+                    ..flipV(duration: 600.ms)
+                        .then(delay: 200.ms) // baseline=800ms
+                        .slide(),
                   sizedBoxWithHeight(
                     40,
                   ),
@@ -120,7 +124,11 @@ class _OtpLoginState extends State<OtpLogin> {
                     style: AppText.text16w400.copyWith(
                       color: AppColors.grey500,
                     ),
-                  ),
+                  )
+                      .animate()
+                      .flipH(duration: 600.ms)
+                      .then(delay: 200.ms) // baseline=800ms
+                      .slide(),
                   sizedBoxWithHeight(15),
                   Container(
                     color: Colors.grey.shade300,
@@ -150,7 +158,11 @@ class _OtpLoginState extends State<OtpLogin> {
                         ),
                       ),
                     ),
-                  ),
+                  )
+                      .animate()
+                      .slideX(duration: 600.ms)
+                      .then(delay: 200.ms) // baseline=800ms
+                      .slide(),
                   sizedBoxWithHeight(20),
                   Text(
                     "Resend code via SMS",
@@ -160,6 +172,10 @@ class _OtpLoginState extends State<OtpLogin> {
                       fontWeight: FontWeight.w700,
                     ),
                   )
+                      .animate()
+                      .fadeIn(duration: 600.ms)
+                      .then(delay: 200.ms) // baseline=800ms
+                      .slide(),
                 ],
               ),
             ),

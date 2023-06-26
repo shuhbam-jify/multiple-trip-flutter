@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:multitrip_user/app_enverionment.dart';
 import 'package:multitrip_user/bottomnavigationbar.dart';
@@ -178,7 +179,11 @@ class _PreviousRidesState extends State<PreviousRides> {
                           size: 15,
                         )
                       ],
-                    );
+                    )
+                        .animate()
+                        .fadeIn(duration: 600.ms)
+                        .then(delay: 200.ms) // baseline=800ms
+                        .scale();
                   },
                   separatorBuilder: (context, index) {
                     return Divider(
