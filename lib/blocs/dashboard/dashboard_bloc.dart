@@ -29,6 +29,9 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
             accesstoken: prefs.getString(Strings.accesstoken)!,
           )
               .then((value) {
+            if (value == null) {
+              emit.call(DashbLoadFail(error: value["message"]));
+            }
             if (value['code'] != null && value?["code"] == 200) {
               var _dashboard = Dashboard.fromJson(value);
               emit.call(

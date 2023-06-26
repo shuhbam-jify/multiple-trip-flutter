@@ -97,6 +97,8 @@ class _LoginPasswordState extends State<LoginPassword> {
                       size: 20,
                     ),
                   ),
+                  sizedBoxWithHeight(24),
+
                   Text("Welcome back, Signin to\ncontinue",
                           style: AppText.text22w500.copyWith(
                             color: AppColors.black,
@@ -105,7 +107,7 @@ class _LoginPasswordState extends State<LoginPassword> {
                       .fadeIn(duration: 600.ms)
                       .then(delay: 200.ms) // baseline=800ms
                       .slide(),
-                  sizedBoxWithHeight(80),
+                  sizedBoxWithHeight(36),
                   Container(
                     color: Colors.grey.shade300,
                     child: TextFormField(
@@ -141,18 +143,18 @@ class _LoginPasswordState extends State<LoginPassword> {
                   SizedBox(
                     height: 20,
                   ),
-                  Text(
-                    "Forgot Password?",
-                    style: GoogleFonts.nunito(
-                      color: Colors.blue.shade800,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  )
-                      .animate()
-                      .fadeIn(duration: 600.ms)
-                      .then(delay: 200.ms) // baseline=800ms
-                      .slide()
+                  // Text(
+                  //   "Forgot Password?",
+                  //   style: GoogleFonts.nunito(
+                  //     color: Colors.blue.shade800,
+                  //     fontSize: 16,
+                  //     fontWeight: FontWeight.w700,
+                  //   ),
+                  // )
+                  //     .animate()
+                  //     .fadeIn(duration: 600.ms)
+                  //     .then(delay: 200.ms) // baseline=800ms
+                  //     .slide()
                 ],
               ),
             ),

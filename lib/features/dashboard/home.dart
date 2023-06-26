@@ -444,7 +444,7 @@ class _HomeScreenDataState extends State<HomeScreenData> {
                 GestureDetector(
                   onTap: () async {
                     var position = await Geolocator.getCurrentPosition(
-                            desiredAccuracy: LocationAccuracy.low)
+                            desiredAccuracy: LocationAccuracy.best)
                         .catchError((e) {
                       print("error is $e");
                     });
@@ -517,7 +517,9 @@ class _HomeScreenDataState extends State<HomeScreenData> {
               ListView.separated(
                 shrinkWrap: true,
                 primary: false,
-                itemCount: state.address.address.length,
+                itemCount: state.address.address.length > 4
+                    ? 3
+                    : state.address.address.length,
                 itemBuilder: (context, index) {
                   return GestureDetector(
                     onTap: () {

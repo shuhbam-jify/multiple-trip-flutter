@@ -1,5 +1,10 @@
 import 'package:fancy_bottom_navigation_2/fancy_bottom_navigation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:multitrip_user/blocs/dashboard/dashboard_bloc.dart';
 import 'package:multitrip_user/features/account/account.dart';
 import 'package:multitrip_user/features/ride_history/previous_ride.dart';
 import 'package:multitrip_user/features/dashboard/home.dart';
@@ -57,6 +62,7 @@ class _PagesWidgetState extends State<PagesWidget> {
           currentPage = HomeScreen(
             parentScaffoldKey: widget.scaffoldKey,
           );
+          _handleHome();
 
           break;
         case 1:
@@ -185,5 +191,26 @@ class _PagesWidgetState extends State<PagesWidget> {
         ),
       ),
     );
+  }
+
+  Future<void> _handleHome() async {
+    var position = await Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.best)
+        .catchError((e) {
+      print("error is $e");
+    });
+    List<Placemark> placemarks = await GeocodingPlatform.instance
+        .placemarkFromCoordinates(position.latitude, position.longitude);
+
+    Placemark place = placemarks.first;
+
+    final fullAddress =
+        '${place.name}, ${place.subThoroughfare} ${place.thoroughfare}, ${place.subLocality}, ${place.locality}, ${place.administrativeArea} ${place.postalCode}, ${place.country}';
+
+    context.read<DashboardBloc>().add(
+          FetchDashboardData(
+              latLng: LatLng(position.latitude, position.longitude),
+              fulladdress: fullAddress),
+        );
   }
 }

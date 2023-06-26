@@ -160,41 +160,15 @@ class _SettingsState extends State<Settings> {
                 sizedBoxWithHeight(40),
                 InkWell(
                   onTap: () {
-                    // AppEnvironment.navigator.push(
-                    //   MaterialPageRoute(
-                    //     builder: (context) => AddHomeAndWork(),
-                    //   ),
-                    // );
+                    AppEnvironment.navigator.push(
+                      MaterialPageRoute(
+                        builder: (context) => AddHomeAndWork(),
+                      ),
+                    );
                   },
                   child: settingoptions(
                     icon: Icon(Icons.home),
-                    text: "Add Home",
-                  ),
-                ),
-                InkWell(
-                  onTap: () {
-                    // AppEnvironment.navigator.push(
-                    //   MaterialPageRoute(
-                    //     builder: (context) => AddHomeAndWork(),
-                    //   ),
-                    // );
-                  },
-                  child: settingoptions(
-                    icon: Icon(Icons.work),
-                    text: "Add Work",
-                  ),
-                ),
-                InkWell(
-                  onTap: () {
-                    // AppEnvironment.navigator.push(
-                    //   MaterialPageRoute(
-                    //     builder: (context) => SettingsShortCuts(),
-                    //   ),
-                    // );
-                  },
-                  child: settingoptions(
-                    icon: Icon(Icons.location_on_rounded),
-                    text: "Shortcuts",
+                    text: "Saved Places",
                   ),
                 ),
                 settingoptions(
@@ -223,7 +197,7 @@ class _SettingsState extends State<Settings> {
                                 Strings.accesstoken,
                               )!,
                               userid: prefs.getString(Strings.userid)!)
-                          .then((value) {
+                          .then((value) async {
                         if (value["code"] == 401) {
                           BlocProvider.of<TokenBloc>(context).add(
                             FetchAccessToken(context: context),
@@ -233,7 +207,7 @@ class _SettingsState extends State<Settings> {
                           context.showSnackBar(context, msg: value["message"]);
                         } else if (value["code"] == 200) {
                           Loader.hide();
-
+                          await prefs.remove(Strings.userid);
                           // BlocProvider.of<DashboardBloc>(context).add(
                           //   InitBloc(),
                           // );

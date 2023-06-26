@@ -280,16 +280,14 @@ class _LoginMobileState extends State<LoginMobile> {
                             context.showSnackBar(context,
                                 msg: "number should be 11 Characters long");
                           } else {
-                            AppEnvironment.navigator
-                                .pushNamed(AuthRoutes.loginpassword);
-                            // Navigator.push(
-                            //   context,
-                            //   MaterialPageRoute(
-                            //     builder: (context) => LoginPassword(
-                            //       mobilenumner: phoneController.text,
-                            //     ),
-                            //   ),
-                            // );
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => LoginPassword(
+                                  mobilenumner: phoneController.text,
+                                ),
+                              ),
+                            );
                           }
                         },
                         child: Row(
