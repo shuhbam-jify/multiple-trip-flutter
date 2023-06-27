@@ -74,7 +74,7 @@ class _AccountState extends State<Account> {
                         style: GoogleFonts.poppins(
                           color: AppColors.black,
                           fontSize: 20.sp,
-                          fontWeight: FontWeight.w300,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                       Container(

@@ -102,7 +102,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
             mobilenumber: event.mobilenumber,
           )
               .then(
-            (value) {
+            (value) async {
               if (value["code"] == 401) {
                 emit.call(TokenExpired());
               } else if (value["code"] == 201) {
@@ -113,6 +113,18 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
                 );
               } else if (value["code"] == 200) {
                 var _verifyotp = VerifyOtp.fromJson(value);
+                if (_verifyotp.userId.isEmpty) {
+                  emit.call(
+                    LoginFail(
+                      error:
+                          'Please try again from other method.Unable to get the user details from server....',
+                    ),
+                  );
+                }
+                await prefs.setString(
+                  Strings.userid,
+                  _verifyotp.userId,
+                );
                 emit.call(
                   LoginPassowrdSuccess(
                     verifyOtp: _verifyotp,
@@ -129,44 +141,6 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
           );
         }
       }
-      // } else if (event is DoUserLogout) {
-      //   print(event);
-      //   final SharedPreferences prefs = await SharedPreferences.getInstance();
-
-      //   emit.call(LogoutLoading());
-      //   try {
-      //     await AppRepository()
-      //         .douserlogout(
-      //             accesstoken: prefs.getString(
-      //               Strings.accesstoken,
-      //             )!,
-      //             userid: prefs.getString(Strings.userid)!)
-      //         .then((value) {
-      //       if (value["code"] == 401) {
-      //         emit.call(TokenExpired());
-      //       } else if (value["code"] == 201) {
-      //         emit.call(
-      //           LogoutFail(
-      //             error: value["message"],
-      //           ),
-      //         );
-      //       } else if (value["code"] == 200) {
-      //         emit.call(
-      //           LogoutSuccess(
-      //             message: value["message"],
-      //           ),
-      //         );
-      //         prefs.clear();
-      //       }
-      //     });
-      //   } catch (e) {
-      //     emit.call(
-      //       LogoutFail(
-      //         error: e.toString(),
-      //       ),
-      //     );
-      //   }
-      // }
     });
   }
 }

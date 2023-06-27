@@ -313,6 +313,7 @@ class _LoginMobileState extends State<LoginMobile> {
                         ),
                         child: Text(
                             "By proceeding you are consenting to receive calls or SMS messages, including by automated dialer from FCDD and its affiliates to the number you provide",
+                            textAlign: TextAlign.justify,
                             style: AppText.text15w400.copyWith(
                               color: AppColors.colorgrey,
                               fontSize: 13.sp,

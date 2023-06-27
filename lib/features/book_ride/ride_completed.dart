@@ -31,8 +31,9 @@ class _RideCompletedState extends State<RideCompleted> {
         leadingWidth: 40.w,
         leading: InkWell(
           onTap: () {
-            AppEnvironment.navigator.pushReplacementNamed(
+            AppEnvironment.navigator.pushNamedAndRemoveUntil(
               GeneralRoutes.pages,
+              (route) => false,
             );
           },
           child: Icon(

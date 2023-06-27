@@ -73,7 +73,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   sizedBoxWithHeight(60),
                   BlocBuilder<TokenBloc, TokenState>(
                     builder: (context, state) {
-                      if (state is TokenFaied || state is TokenInitial) {
+                      if (state is TokenInitial) {
                         return InkWell(
                           onTap: () {
                             isLoggedIn(

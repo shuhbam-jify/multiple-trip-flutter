@@ -72,11 +72,6 @@ class _LoginPasswordState extends State<LoginPassword> {
               GeneralRoutes.pages,
               (route) => false,
             );
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (context) => PagesWidget()),
-              (route) => false,
-            );
           }
         },
         child: SafeArea(
