@@ -59,16 +59,23 @@ dependencies:
   google_fonts: ^4.0.3
   google_maps_flutter: ^2.2.8
   google_maps_webservice: ^0.0.20-nullsafety.5
+  image_cropper: ^4.0.0
   image_picker: ^0.8.7+5
   internet_connection_checker: ^1.0.0+1
   intl: ^0.18.1
   location_picker_flutter_map: ^1.2.0
+  panara_dialogs: ^0.1.4
   permission_handler: ^10.2.0
   provider: ^6.0.5
   reorderables: ^0.6.0
   sentry_flutter: ^7.6.3
   shared_preferences: ^2.1.0
+  timelines: ^0.1.0
   top_modal_sheet: ^2.0.1
+  flutter_local_notifications: ^13.0.0
+  flutter_widget_from_html: ^0.9.0
+
+  url_launcher: ^6.1.11
   widget_to_marker: ^1.0.3
 
 dev_dependencies:

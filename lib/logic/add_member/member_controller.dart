@@ -16,6 +16,14 @@ class MembersController extends ChangeNotifier {
   TextEditingController phoneController = TextEditingController();
   bool isloading = false;
 
+  clear() {
+    firstnamecontroller.clear();
+    lastnameController.clear();
+    emailController.clear();
+    addressController.clear();
+    phoneController.clear();
+  }
+
   Future<void> getmembers({
     required BuildContext context,
   }) async {
@@ -40,6 +48,7 @@ class MembersController extends ChangeNotifier {
         Loader.hide();
         notifyListeners();
       } else if (value["code"] == 401) {
+        AppRepository().saveAccessToken();
         // Provider.of<AuthController>(context, listen: false).refreshaccesstoken(
       } else if (value["code"] == 201) {
         Loader.hide();
@@ -86,6 +95,7 @@ class MembersController extends ChangeNotifier {
             userid: prefs.getString(Strings.userid)!)
         .then((value) {
       if (value["code"] == 200) {
+        clear();
         context.showSnackBar(context, msg: value["message"]);
         Navigator.pop(context);
 

@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:multitrip_user/app_enverionment.dart';
+import 'package:multitrip_user/blocs/account/account_controller.dart';
 import 'package:multitrip_user/bottomnavigationbar.dart';
-import 'package:multitrip_user/models/ridehistory.dart';
 import 'package:multitrip_user/shared/shared.dart';
 import 'package:multitrip_user/shared/ui/common/app_image.dart';
 import 'package:multitrip_user/shared/ui/common/spacing.dart';
 import 'package:multitrip_user/themes/app_text.dart';
+import 'package:provider/provider.dart';
+import 'package:timelines/timelines.dart';
 
 class PreviousRides extends StatefulWidget {
   final GlobalKey<ScaffoldState>? parentScaffoldKey;
@@ -19,13 +21,14 @@ class PreviousRides extends StatefulWidget {
 }
 
 class _PreviousRidesState extends State<PreviousRides> {
-  List<RideHistory> ridehistory = [
-    RideHistory(name: "Sam", price: "40", rating: 4),
-    RideHistory(name: "Ram", price: "30", rating: 1.4),
-    RideHistory(name: "Aam", price: "540", rating: 4.4),
-    RideHistory(name: "Rahul", price: "140", rating: 2),
-    RideHistory(name: "Test User", price: "80", rating: 5),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _apiCall();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -64,9 +67,9 @@ class _PreviousRidesState extends State<PreviousRides> {
           ),
         ),
         body: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20.w),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+          child: ListView(
+            // crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 "Previous rides",
@@ -75,127 +78,228 @@ class _PreviousRidesState extends State<PreviousRides> {
                 ),
               ),
               sizedBoxWithHeight(30),
-              Text(
-                "Past",
-                style: AppText.text14w400.copyWith(
-                  color: AppColors.black,
-                  fontSize: 14.sp,
-                ),
-              ),
-              sizedBoxWithHeight(20),
-              Container(
-                padding: EdgeInsets.all(8),
-                height: 230.h,
-                width: double.infinity,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      height: 155.h,
-                      margin: EdgeInsets.all(5),
-                      width: double.infinity,
-                    ),
-                    Text(
-                      "1 Feb, 9:30 AM",
-                      style: AppText.text14w400.copyWith(
-                        color: AppColors.black,
-                        fontSize: 14.sp,
+              Consumer<AccountController>(
+                builder: (context, model, __) {
+                  if (model.history?.bookings?.isEmpty ?? true) {
+                    return Center(
+                      child: Text(
+                        'No Booking History',
+                        style: AppText.text16w400,
                       ),
-                    ),
-                    Text(
-                      "'\$10",
-                      style: AppText.text14w400.copyWith(
-                        color: AppColors.black,
-                        fontSize: 14.sp,
-                      ),
-                    )
-                  ],
-                ),
-                decoration: BoxDecoration(
-                    color: Colors.transparent,
-                    borderRadius: BorderRadius.circular(10.r),
-                    border: Border.all(
-                      color: AppColors.greylight,
-                    )),
-              ),
-              sizedBoxWithHeight(30),
-              ListView.separated(
-                  shrinkWrap: true,
-                  primary: false,
-                  itemBuilder: (context, index) {
-                    return Row(
-                      children: [
-                        AppImage(
-                          Images.driver,
-                          height: 50.h,
-                          width: 50.w,
-                        ),
-                        sizedBoxWithWidth(15),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              ridehistory.elementAt(index).name,
-                              style: AppText.text14w400.copyWith(
-                                color: AppColors.black,
-                                fontSize: 14.sp,
-                              ),
-                            ),
-                            RatingBar.builder(
-                              initialRating:
-                                  ridehistory.elementAt(index).rating,
-                              minRating: 1,
-                              direction: Axis.horizontal,
-                              ignoreGestures: true,
-                              allowHalfRating: true,
-                              unratedColor: Colors.grey,
-                              itemCount: 5,
-                              itemSize: 15,
-                              itemPadding: EdgeInsets.symmetric(horizontal: .0),
-                              itemBuilder: (context, _) => Icon(
-                                Icons.star,
-                                color: Colors.amber,
-                                size: 10,
-                              ),
-                              onRatingUpdate: (rating) {
-                                print(rating);
-                              },
-                            ),
-                          ],
-                        ),
-                        Spacer(),
-                        Text(
-                          "\$ ${ridehistory.elementAt(index).price}",
-                          style: AppText.text14w400.copyWith(
-                            fontSize: 14.sp,
-                            color: AppColors.black,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        sizedBoxWithWidth(10),
-                        Icon(
-                          Icons.arrow_forward_ios_sharp,
-                          color: AppColors.black,
-                          size: 15,
-                        )
-                      ],
-                    )
-                        .animate()
-                        .fadeIn(duration: 600.ms)
-                        .then(delay: 200.ms) // baseline=800ms
-                        .scale();
-                  },
-                  separatorBuilder: (context, index) {
-                    return Divider(
-                      thickness: 0.9,
-                      color: AppColors.greylight,
                     );
-                  },
-                  itemCount: ridehistory.length)
+                  }
+                  return ListView.separated(
+                      shrinkWrap: true,
+                      primary: false,
+                      itemBuilder: (context, index) {
+                        return Column(
+                          children: [
+                            Row(
+                              children: [
+                                AppImage(
+                                  (model.history?.bookings
+                                              ?.elementAt(index)
+                                              .driverProfilePhoto
+                                              ?.isEmpty ??
+                                          true)
+                                      ? Images.driver
+                                      : model.history!.bookings!
+                                          .elementAt(index)
+                                          .driverProfilePhoto!,
+                                  height: 50.h,
+                                  width: 50.w,
+                                ),
+                                sizedBoxWithWidth(15),
+                                if (model.history?.bookings
+                                        ?.elementAt(index)
+                                        .driverMobileNumber
+                                        ?.isNotEmpty ??
+                                    false) ...{
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        model.history!.bookings!
+                                                .elementAt(index)
+                                                .driverName ??
+                                            'NA',
+                                        style: AppText.text14w400.copyWith(
+                                          color: AppColors.black,
+                                          fontSize: 14.sp,
+                                        ),
+                                      ),
+                                      IgnorePointer(
+                                        child: RatingBar.builder(
+                                          initialRating: (model
+                                                      .history!.bookings!
+                                                      .elementAt(index)
+                                                      .driverRating
+                                                      ?.isEmpty ??
+                                                  true)
+                                              ? 0.0
+                                              : double.tryParse(model
+                                                      .history!.bookings!
+                                                      .elementAt(index)
+                                                      .driverRating
+                                                      .toString()) ??
+                                                  0.0,
+                                          minRating: 0,
+                                          direction: Axis.horizontal,
+                                          ignoreGestures: true,
+                                          allowHalfRating: true,
+                                          unratedColor: Colors.grey,
+                                          itemCount: 5,
+                                          itemSize: 15,
+                                          itemPadding: EdgeInsets.symmetric(
+                                              horizontal: .0),
+                                          itemBuilder: (context, _) => Icon(
+                                            Icons.star,
+                                            color: Colors.amber,
+                                            size: 10,
+                                          ),
+                                          onRatingUpdate: (double value) {},
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                } else ...{
+                                  Text(
+                                    'Driver is not assigned',
+                                    style: AppText.text14w400.copyWith(
+                                      color: AppColors.black,
+                                      fontSize: 14.sp,
+                                    ),
+                                  ),
+                                },
+                                Spacer(),
+                                Column(
+                                  children: [
+                                    Text(
+                                      "\$ ${model.history!.bookings!.elementAt(index).amount}",
+                                      style: AppText.text14w400.copyWith(
+                                        fontSize: 14.sp,
+                                        color: AppColors.black,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      height: 4.h,
+                                    ),
+                                    Container(
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: 4.w, vertical: 2.h),
+                                      decoration: BoxDecoration(
+                                          color: AppColors.greylight,
+                                          borderRadius:
+                                              BorderRadius.circular(4.r)),
+                                      child: Text(
+                                        (model.history!.bookings!
+                                                .elementAt(index)
+                                                .status
+                                                ?.toUpperCase() ??
+                                            ''),
+                                        style: AppText.text14w400
+                                            .copyWith(fontSize: 10),
+                                      ),
+                                    )
+                                  ],
+                                ),
+                                sizedBoxWithWidth(10),
+                              ],
+                            ),
+                            SizedBox(
+                              height: 12.h,
+                            ),
+                            Timeline.tileBuilder(
+                              shrinkWrap: true,
+                              padding: EdgeInsets.zero,
+                              physics: NeverScrollableScrollPhysics(),
+                              theme: TimelineThemeData(
+                                  indicatorTheme: IndicatorThemeData(
+                                      size: 12.r, color: Colors.green),
+                                  connectorTheme: ConnectorThemeData(
+                                      color: AppColors.greydark),
+                                  indicatorPosition: 0,
+                                  nodePosition: 0),
+                              builder: TimelineTileBuilder.connectedFromStyle(
+                                contentsAlign: ContentsAlign.basic,
+                                indicatorStyleBuilder: (_, __) => __ == 0
+                                    ? IndicatorStyle.outlined
+                                    : IndicatorStyle.dot,
+                                lastConnectorStyle: ConnectorStyle.transparent,
+                                connectorStyleBuilder: (__, v) => v ==
+                                        ((model.history!.bookings!
+                                                    .elementAt(index)
+                                                    .dropLocation
+                                                    ?.length ??
+                                                0) -
+                                            1)
+                                    ? ConnectorStyle.transparent
+                                    : ConnectorStyle.solidLine,
+                                contentsBuilder: (context, _index) => Padding(
+                                  padding:
+                                      EdgeInsets.only(left: 4.w, bottom: 10.h),
+                                  child: Text(
+                                    model.history!.bookings!
+                                            .elementAt(index)
+                                            .dropLocation?[_index]
+                                            .address ??
+                                        'NA',
+                                    style: AppText.text14w400,
+                                  ),
+                                ),
+                                itemCount: model.history!.bookings!
+                                        .elementAt(index)
+                                        .dropLocation
+                                        ?.length ??
+                                    0,
+                              ),
+                            ),
+                            SizedBox(
+                              height: 8.h,
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Booking Date',
+                                  style: AppText.text14w400,
+                                ),
+                                Text(
+                                  model.history!.bookings!
+                                          .elementAt(index)
+                                          .bookingDate ??
+                                      '',
+                                  style: AppText.text14w400
+                                      .copyWith(fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            )
+                          ],
+                        )
+                            .animate()
+                            .fadeIn(duration: 600.ms)
+                            .then(delay: 200.ms) // baseline=800ms
+                            .scale();
+                      },
+                      separatorBuilder: (context, index) {
+                        return Divider(
+                          thickness: 0.9,
+                          color: AppColors.greylight,
+                        );
+                      },
+                      itemCount: model.history!.bookings!.length);
+                },
+              )
             ],
           ),
         ),
       ),
     );
+  }
+
+  void _apiCall() {
+    context.read<AccountController>().getBookingHistory(onFailure: () {});
   }
 }

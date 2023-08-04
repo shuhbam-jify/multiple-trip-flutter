@@ -3,22 +3,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_overlay_loader/flutter_overlay_loader.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_svg_provider/flutter_svg_provider.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:get/get_state_manager/get_state_manager.dart';
-import 'package:get/state_manager.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:multitrip_user/app_enverionment.dart';
 import 'package:multitrip_user/blocs/account/account_controller.dart';
 import 'package:multitrip_user/blocs/address/address_bloc.dart' as ad;
-import 'package:multitrip_user/blocs/dashboard/dashboard_bloc.dart';
-import 'package:multitrip_user/blocs/token/token_bloc.dart';
+import 'package:multitrip_user/blocs/dashboard/dashboard_controller.dart';
+import 'package:multitrip_user/blocs/login/login_bloc.dart';
+import 'package:multitrip_user/features/book_ride/booking_otp.dart';
 import 'package:multitrip_user/features/book_ride/pickupdropaddress.dart';
 import 'package:multitrip_user/features/book_ride/schedule_ride.dart';
 import 'package:multitrip_user/features/permission_page.dart';
+import 'package:multitrip_user/logic/after_booking_controller.dart';
 import 'package:multitrip_user/shared/globles.dart';
 import 'package:multitrip_user/shared/shared.dart';
 import 'package:multitrip_user/shared/ui/common/app_image.dart';
@@ -40,8 +39,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  DashboardBloc dashboardBloc = DashboardBloc();
-
   late Position currentPosition;
   late String fullAddress;
 
@@ -82,9 +79,8 @@ class _HomeScreenState extends State<HomeScreen> {
         context.showSnackBar(context,
             msg: error
                 .message!); // Permissions are denied forever, handle appropriately.
-        dashboardBloc.add(
-          FetchDashboardData(latLng: LatLng(0.0, 0.0), fulladdress: ''),
-        );
+        context.read<DashBoardController>().callDashboardApi(LatLng(0.0, 0.0));
+
         Navigator.push(
             context, MaterialPageRoute(builder: (_) => NoPermission()));
         return Future.error(error);
@@ -100,10 +96,6 @@ class _HomeScreenState extends State<HomeScreen> {
         // App to enable the location services.
         while (!await Geolocator.isLocationServiceEnabled()) {}
       }
-      Loader.show(context,
-          progressIndicator: CircularProgressIndicator(
-            color: AppColors.black,
-          ));
 
       var position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.best,
@@ -120,40 +112,61 @@ class _HomeScreenState extends State<HomeScreen> {
         fullAddress =
             '${place.name}, ${place.subThoroughfare} ${place.thoroughfare}, ${place.subLocality}, ${place.locality}, ${place.administrativeArea} ${place.postalCode}, ${place.country}';
       });
-      dashboardBloc.add(
-        FetchDashboardData(
-            latLng: LatLng(currentPosition.latitude, currentPosition.longitude),
-            fulladdress: fullAddress),
-      );
-
-      Loader.hide();
-      // this.add(
-      //   FetchDashboardData(
-      //       fulladdress: _fullAddress,
-      //       latLng: LatLng(
-      //         _currentPosition.latitude,
-      //         _currentPosition.longitude,
-      //       )),
-      // );
+      context.read<DashBoardController>().fullAddress = fullAddress;
+      context.read<DashBoardController>().saveCurrentLocatoin(
+          LatLng(
+            position.latitude,
+            position.longitude,
+          ),
+          fulladdress: fullAddress);
+      context.read<DashBoardController>().callDashboardApi(
+          LatLng(currentPosition.latitude, currentPosition.longitude));
     } catch (e) {
-      Loader.hide();
       context.showSnackBar(context, msg: e.toString());
-    } finally {
-      Loader.hide();
-    }
+    } finally {}
   }
 
   @override
   void initState() {
     super.initState();
 
-    dashboardBloc = BlocProvider.of<DashboardBloc>(context);
     addressBloc = BlocProvider.of<ad.AddressBloc>(context);
 
     addressBloc.add(ad.FetchAddress());
     fetchlocatiocation().onError((error, stackTrace) => {errorPermssionWidget});
     Provider.of<AccountController>(context, listen: false)
         .getPofileData(isEnableLoading: false);
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      handleCurrentBooking();
+    });
+  }
+
+  Future<void> handleCurrentBooking() async {
+    await Provider.of<AfterBookingController>(context, listen: false)
+        .currentBooking();
+    if (!mounted) {
+      return;
+    }
+    final resultant = context.read<AfterBookingController>().booking;
+    if (resultant?.bookingId?.isNotEmpty ?? false) {
+      if (resultant?.status == 'payment done' ||
+          resultant?.status == 'payment received') {
+        return;
+      }
+      AppEnvironment.navigator.push(
+        MaterialPageRoute(
+          builder: (context) => BookingOTP(
+            droplatlong: LatLng(
+                double.parse(resultant?.dropLocation?.last.lat ?? '0.0'),
+                double.parse(resultant?.dropLocation?.last.long ?? '0.0')),
+            pickuplatlong: LatLng(
+                double.parse(resultant?.pickupLocation?.lat ?? '0.0'),
+                double.parse(resultant?.pickupLocation?.long ?? '0.0')),
+            bookingId: resultant!.bookingId,
+          ),
+        ),
+      );
+    }
   }
 
   @override
@@ -179,9 +192,7 @@ class _HomeScreenState extends State<HomeScreen> {
         fetchlocatiocation()
             .onError((error, stackTrace) => {errorPermssionWidget});
       },
-      child: HomeScreenData(
-        dashboardBloc: dashboardBloc,
-      ),
+      child: HomeScreenData(),
     );
   }
 }
@@ -216,9 +227,9 @@ final List<Widget> imageSliders = drivers
     .toList();
 
 class HomeScreenData extends StatefulWidget {
-  final DashboardBloc dashboardBloc;
-
-  const HomeScreenData({super.key, required this.dashboardBloc});
+  const HomeScreenData({
+    super.key,
+  });
 
   @override
   State<HomeScreenData> createState() => _HomeScreenDataState();
@@ -228,39 +239,133 @@ class _HomeScreenDataState extends State<HomeScreenData> {
   final CarouselController controller = CarouselController();
   int _current = 0;
 
-  late DashboardBloc dashboardBloc;
-
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    dashboardBloc = widget.dashboardBloc;
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<DashboardBloc, DashboardState>(
-        bloc: dashboardBloc,
-        builder: (context, state) {
-          if (state is DashboardLoaded) {
-            Loader.hide();
-            return SafeArea(
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                      horizontal: 16.w,
-                    ) +
-                    EdgeInsets.only(
-                      top: 10.h,
+    return Consumer<DashBoardController>(builder: (context, model, _) {
+      if (model.isLoading || model.dashboard == null) {
+        return Center(child: CircularProgressIndicator());
+      }
+      if (model.dashboard != null) {
+        return SafeArea(
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+                  horizontal: 16.w,
+                ) +
+                EdgeInsets.only(
+                  top: 10.h,
+                ),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _locationtextfield(model),
+                  sizedBoxWithHeight(10),
+                  _addresslistview(),
+                  sizedBoxWithHeight(10),
+                  Text(
+                    "Online drivers",
+                    style: AppText.text18w400.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.black,
                     ),
-                child: SingleChildScrollView(
-                  child: Column(
+                  ),
+                  sizedBoxWithHeight(10),
+                  SizedBox(
+                    height: 130.h,
+                    child: ListView.separated(
+                            padding: EdgeInsets.only(
+                              left: 20.w,
+                            ),
+                            scrollDirection: Axis.horizontal,
+                            shrinkWrap: true,
+                            itemBuilder: (context, index) {
+                              if (model.dashboard?.topRatedDrivers[index].id ==
+                                  null) {
+                                return SizedBox();
+                              }
+                              return _driverview(
+                                  driverImage: model.dashboard
+                                          ?.topRatedDrivers[index].photo ??
+                                      '',
+                                  driverName: model.dashboard
+                                          ?.topRatedDrivers[index].fname ??
+                                      '',
+                                  driverRating: model.dashboard
+                                          ?.topRatedDrivers[index].rating ??
+                                      '0');
+                            },
+                            separatorBuilder: (context, index) {
+                              return SizedBox(
+                                width: 50.w,
+                              );
+                            },
+                            itemCount:
+                                model.dashboard?.topRatedDrivers.length ?? 0)
+                        .animate()
+                        .fadeIn(duration: 300.ms)
+                        .then(delay: 00.ms) // baseline=800ms
+                        .scale(),
+                  ),
+                  Stack(
+                    children: [
+                      CarouselSlider(
+                        items: imageSliders,
+                        carouselController: controller,
+                        options: CarouselOptions(
+                            height: 120.h,
+                            viewportFraction: 1.0,
+                            autoPlay: true,
+                            enlargeCenterPage: false,
+                            onPageChanged: (index, reason) {
+                              setState(() {
+                                _current = index;
+                              });
+                            }),
+                      ),
+                      Positioned(
+                        top: 90.h,
+                        left: MediaQuery.of(context).size.width / 2.4,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: drivers.asMap().entries.map((entry) {
+                            return GestureDetector(
+                              onTap: () => controller.animateToPage(entry.key),
+                              child: Container(
+                                width: 6.0,
+                                height: 6.0,
+                                margin: EdgeInsets.symmetric(
+                                    vertical: 4.0, horizontal: 2.0),
+                                decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: (Theme.of(context).brightness ==
+                                                Brightness.dark
+                                            ? Colors.white
+                                            : AppColors.black)
+                                        .withOpacity(
+                                            _current == entry.key ? 0.9 : 0.4)),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      )
+                    ],
+                  ),
+                  sizedBoxWithHeight(10),
+                  Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _locationtextfield(state: state),
-                      sizedBoxWithHeight(10),
-                      _addresslistview(),
+                      Divider(
+                        thickness: 2,
+                        color: AppColors.greydark,
+                      ),
                       sizedBoxWithHeight(10),
                       Text(
-                        "Online drivers",
+                        "Previous drivers",
                         style: AppText.text18w400.copyWith(
                           fontWeight: FontWeight.w900,
                           color: AppColors.black,
@@ -269,28 +374,19 @@ class _HomeScreenDataState extends State<HomeScreenData> {
                       sizedBoxWithHeight(10),
                       SizedBox(
                         height: 130.h,
-                        child: ListView.separated(
+                        child: (model.dashboard?.previousDrivers.length ?? 0) >
+                                0
+                            ? ListView.separated(
                                 padding: EdgeInsets.only(
                                   left: 20.w,
                                 ),
                                 scrollDirection: Axis.horizontal,
                                 shrinkWrap: true,
                                 itemBuilder: (context, index) {
-                                  if (state.dashboard.topRatedDrivers[index]
-                                          .id ==
-                                      null) {
-                                    return SizedBox();
-                                  }
                                   return _driverview(
-                                      driverImage: state.dashboard
-                                              .topRatedDrivers[index].photo ??
-                                          '',
-                                      driverName: state.dashboard
-                                              .topRatedDrivers[index].fname ??
-                                          '',
-                                      driverRating: state.dashboard
-                                              .topRatedDrivers[index].rating ??
-                                          '0');
+                                      driverImage: "",
+                                      driverName: "Sugam",
+                                      driverRating: "0.0");
                                 },
                                 separatorBuilder: (context, index) {
                                   return SizedBox(
@@ -298,220 +394,117 @@ class _HomeScreenDataState extends State<HomeScreenData> {
                                   );
                                 },
                                 itemCount:
-                                    state.dashboard.topRatedDrivers.length)
-                            .animate()
-                            .fadeIn(duration: 300.ms)
-                            .then(delay: 00.ms) // baseline=800ms
-                            .scale(),
-                      ),
-                      Stack(
-                        children: [
-                          CarouselSlider(
-                            items: imageSliders,
-                            carouselController: controller,
-                            options: CarouselOptions(
-                                height: 120.h,
-                                viewportFraction: 1.0,
-                                autoPlay: true,
-                                enlargeCenterPage: false,
-                                onPageChanged: (index, reason) {
-                                  setState(() {
-                                    _current = index;
-                                  });
-                                }),
-                          ),
-                          Positioned(
-                            top: 90.h,
-                            left: MediaQuery.of(context).size.width / 2.4,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: drivers.asMap().entries.map((entry) {
-                                return GestureDetector(
-                                  onTap: () =>
-                                      controller.animateToPage(entry.key),
-                                  child: Container(
-                                    width: 6.0,
-                                    height: 6.0,
-                                    margin: EdgeInsets.symmetric(
-                                        vertical: 4.0, horizontal: 2.0),
-                                    decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: (Theme.of(context).brightness ==
-                                                    Brightness.dark
-                                                ? Colors.white
-                                                : AppColors.black)
-                                            .withOpacity(_current == entry.key
-                                                ? 0.9
-                                                : 0.4)),
+                                    model.dashboard?.nearbyDrivers.length ?? 0)
+                            : Center(
+                                child: Text(
+                                  'No Previous drivers Found',
+                                  style: AppText.text16w400.copyWith(
+                                    fontWeight: FontWeight.w900,
+                                    color: AppColors.black,
                                   ),
-                                );
-                              }).toList(),
-                            ),
-                          )
-                        ],
+                                ),
+                              ),
                       ),
-                      sizedBoxWithHeight(10),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Divider(
-                            thickness: 2,
-                            color: AppColors.greydark,
-                          ),
-                          sizedBoxWithHeight(10),
-                          Text(
-                            "Previous drivers",
-                            style: AppText.text18w400.copyWith(
-                              fontWeight: FontWeight.w900,
-                              color: AppColors.black,
-                            ),
-                          ),
-                          sizedBoxWithHeight(10),
-                          SizedBox(
-                            height: 130.h,
-                            child: state.dashboard.previousDrivers.length > 0
-                                ? ListView.separated(
-                                    padding: EdgeInsets.only(
-                                      left: 20.w,
-                                    ),
-                                    scrollDirection: Axis.horizontal,
-                                    shrinkWrap: true,
-                                    itemBuilder: (context, index) {
-                                      return _driverview(
-                                          driverImage: "",
-                                          driverName: "Sugam",
-                                          driverRating: "0.0");
-                                    },
-                                    separatorBuilder: (context, index) {
-                                      return SizedBox(
-                                        width: 50.w,
-                                      );
-                                    },
-                                    itemCount:
-                                        state.dashboard.nearbyDrivers.length)
-                                : Center(
-                                    child: Text(
-                                      'No Previous drivers Found',
-                                      style: AppText.text16w400.copyWith(
-                                        fontWeight: FontWeight.w900,
-                                        color: AppColors.black,
-                                      ),
-                                    ),
-                                  ),
-                          ),
-                          Divider(
-                            thickness: 5,
-                            color: AppColors.greydark,
-                          ),
-                        ],
-                      ),
-                      sizedBoxWithHeight(10),
-                      Text(
-                        "Drivers Nearby",
-                        style: AppText.text18w400.copyWith(
-                          fontWeight: FontWeight.w900,
-                          color: AppColors.black,
-                        ),
-                      ),
-                      sizedBoxWithHeight(10),
-                      Container(
-                        height: 170.h,
-                        child: ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: AppGoogleMap()),
-                        decoration: BoxDecoration(
-                          color: AppColors.greylight,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      sizedBoxWithHeight(10),
                       Divider(
-                        thickness: .5,
+                        thickness: 5,
                         color: AppColors.greydark,
                       ),
                     ],
                   ),
-                ),
-              ),
-            );
-          }
-          if (state is DashbLoadFail) {
-            return Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text('Something Went Wrong!!!'),
-                GestureDetector(
-                  onTap: () async {
-                    var position = await Geolocator.getCurrentPosition(
-                            desiredAccuracy: LocationAccuracy.best)
-                        .catchError((e) {
-                      print("error is $e");
-                    });
-                    List<Placemark> placemarks = await GeocodingPlatform
-                        .instance
-                        .placemarkFromCoordinates(
-                            position.latitude, position.longitude);
-
-                    Placemark place = placemarks.first;
-
-                    final fullAddress =
-                        '${place.name}, ${place.subThoroughfare} ${place.thoroughfare}, ${place.subLocality}, ${place.locality}, ${place.administrativeArea} ${place.postalCode}, ${place.country}';
-
-                    dashboardBloc.add(
-                      FetchDashboardData(
-                          latLng: LatLng(position.latitude, position.longitude),
-                          fulladdress: fullAddress),
-                    );
-                  },
-                  child: Container(
-                    width: 200.w,
-                    child: Center(
-                      child: Text(
-                        "Retry",
-                        style: AppText.text15w400.copyWith(
-                          color: Colors.white,
-                        ),
-                      ),
+                  sizedBoxWithHeight(10),
+                  Text(
+                    "Drivers Nearby",
+                    style: AppText.text18w400.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.black,
                     ),
-                    padding: EdgeInsets.symmetric(
-                      vertical: 16.h,
-                    ),
+                  ),
+                  sizedBoxWithHeight(10),
+                  Container(
+                    height: 170.h,
+                    child: ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: AppGoogleMap()),
                     decoration: BoxDecoration(
-                      color: AppColors.green,
-                      borderRadius: BorderRadius.circular(
-                        10.r,
+                      color: AppColors.greylight,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  sizedBoxWithHeight(10),
+                  Divider(
+                    thickness: .5,
+                    color: AppColors.greydark,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }
+      if (model.error != null) {
+        return Container(
+          width: double.infinity,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text('Something Went Wrong!!!'),
+              SizedBox(
+                height: 16.h,
+              ),
+              GestureDetector(
+                onTap: () async {
+                  var position = await Geolocator.getCurrentPosition(
+                          desiredAccuracy: LocationAccuracy.best)
+                      .catchError((e) {
+                    print("error is $e");
+                  });
+                  List<Placemark> placemarks = await GeocodingPlatform.instance
+                      .placemarkFromCoordinates(
+                          position.latitude, position.longitude);
+
+                  Placemark place = placemarks.first;
+
+                  var fullAddress =
+                      '${place.name}, ${place.subThoroughfare} ${place.thoroughfare}, ${place.subLocality}, ${place.locality}, ${place.administrativeArea} ${place.postalCode}, ${place.country}';
+
+                  context.read<DashBoardController>().callDashboardApi(
+                        LatLng(position.latitude, position.longitude),
+                      );
+                },
+                child: Container(
+                  width: 180.w,
+                  child: Center(
+                    child: Text(
+                      "Retry",
+                      style: AppText.text15w400.copyWith(
+                        color: Colors.white,
                       ),
                     ),
                   ),
+                  padding: EdgeInsets.symmetric(
+                    vertical: 16.h,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.green,
+                    borderRadius: BorderRadius.circular(
+                      10.r,
+                    ),
+                  ),
                 ),
-              ],
-            );
-          }
-          return SizedBox();
-        },
-        listener: ((context, state) {
-          if (state is DashboardLoading) {
-            Loader.show(context,
-                progressIndicator: CircularProgressIndicator(
-                  color: AppColors.green,
-                ));
-          } else if (state is TokenExpired) {
-            Loader.hide();
-            BlocProvider.of<TokenBloc>(context)
-                .add(FetchAccessToken(context: context));
-          } else if (state is DashbLoadFail) {
-            Loader.hide();
-            context.showSnackBar(context, msg: state.error);
-          }
-        }));
+              ),
+            ],
+          ),
+        );
+      }
+      return SizedBox();
+    });
   }
 
   Widget _addresslistview() {
     return BlocConsumer<ad.AddressBloc, ad.AddressState>(
       builder: (context, state) {
         if (state is ad.AddressLoaded) {
-          Loader.hide();
           return Column(
             children: [
               ListView.separated(
@@ -523,20 +516,20 @@ class _HomeScreenDataState extends State<HomeScreenData> {
                 itemBuilder: (context, index) {
                   return GestureDetector(
                     onTap: () {
-                      final dbBoard = context.read<DashboardBloc>().state;
-                      if (dbBoard is DashboardLoaded) {
+                      final dbBoard = context.read<DashBoardController>();
+                      if (dbBoard.currentLocation != null) {
                         AppEnvironment.navigator.push(MaterialPageRoute(
                           builder: (context) => PickupDropAddress(
-                            lat: dbBoard.currentlocation.latitude,
-                            long: dbBoard.currentlocation.longitude,
-                            pickupaddess: dbBoard.fulladdeess,
+                            lat: dbBoard.currentLocation!.latitude,
+                            long: dbBoard.currentLocation!.longitude,
+                            pickupaddess: dbBoard.fullAddress ?? '',
                             dropLocation: state.address.address[index],
                           ),
                         ));
                       }
                     },
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         Container(
                           height: 50.h,
@@ -551,20 +544,21 @@ class _HomeScreenDataState extends State<HomeScreenData> {
                               shape: BoxShape.circle),
                         ),
                         sizedBoxWithWidth(10),
-                        Flexible(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              Text(
-                                state.address.address
-                                    .elementAt(index)
-                                    .addressLine1,
-                                style: AppText.text16w400.copyWith(
-                                  color: AppColors.black,
-                                ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Text(
+                              state.address.address
+                                  .elementAt(index)
+                                  .addressLine1,
+                              style: AppText.text16w400.copyWith(
+                                color: AppColors.black,
                               ),
-                              Text(
+                            ),
+                            Container(
+                              width: 280.w,
+                              child: Text(
                                 state.address.address
                                     .elementAt(index)
                                     .addressLine2,
@@ -574,10 +568,11 @@ class _HomeScreenDataState extends State<HomeScreenData> {
                                   color: AppColors.grey500,
                                   fontSize: 13.sp,
                                 ),
-                              )
-                            ],
-                          ),
+                              ),
+                            )
+                          ],
                         ),
+                        Spacer(),
                         Icon(
                           Icons.arrow_forward_ios,
                           color: AppColors.black,
@@ -606,21 +601,9 @@ class _HomeScreenDataState extends State<HomeScreenData> {
       },
       listener: (context, state) {
         if (state is ad.AddressLoading) {
-          Loader.show(context,
-              progressIndicator: CircularProgressIndicator(
-                color: AppColors.colorRed,
-              ));
         } else if (state is ad.AddressFailed) {
-          context.showSnackBar(context, msg: state.error);
         } else if (state is ad.AddressNotFound) {
-          Loader.hide();
-        } else if (state is TokenExpired) {
-          Loader.hide();
-          context.showSnackBar(context, msg: "Token Expired");
-          BlocProvider.of<TokenBloc>(context).add(
-            FetchAccessToken(context: context),
-          );
-        }
+        } else if (state is TokenExpired) {}
       },
     );
   }
@@ -672,7 +655,7 @@ class _HomeScreenDataState extends State<HomeScreenData> {
     );
   }
 
-  Widget _locationtextfield({required DashboardLoaded state}) {
+  Widget _locationtextfield(model) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.grey.shade300,
@@ -682,9 +665,18 @@ class _HomeScreenDataState extends State<HomeScreenData> {
         onTap: () {
           AppEnvironment.navigator.push(MaterialPageRoute(
             builder: (context) => PickupDropAddress(
-              lat: state.currentlocation.latitude,
-              long: state.currentlocation.longitude,
-              pickupaddess: state.fulladdeess,
+              lat: context
+                      .read<DashBoardController>()
+                      .currentLocation
+                      ?.latitude ??
+                  0.0,
+              long: context
+                      .read<DashBoardController>()
+                      .currentLocation
+                      ?.longitude ??
+                  0.0,
+              pickupaddess:
+                  context.read<DashBoardController>().fullAddress ?? '',
             ),
           ));
         },

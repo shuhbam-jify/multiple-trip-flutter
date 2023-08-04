@@ -148,7 +148,7 @@ class _AccountEmailState extends State<AccountEmail> {
   Future<void> _handleOnTap() async {
     FocusScope.of(context).unfocus();
     if (_textController.text.isEmpty) {
-      context.showSnackBar(context, msg: 'Please enter the fields');
+      context.showSnackBar((context), msg: 'Please enter the fields');
       return;
     }
     Loader.show(context);

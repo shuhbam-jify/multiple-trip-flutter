@@ -1,8 +1,11 @@
 import 'package:bloc/bloc.dart';
+import 'package:get_it/get_it.dart';
 import 'package:meta/meta.dart';
 import 'package:multitrip_user/api/app_repository.dart';
+import 'package:multitrip_user/api/token_manager.dart';
 import 'package:multitrip_user/models/login.dart';
 import 'package:multitrip_user/shared/shared.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../models/verityotp.dart';
@@ -21,27 +24,32 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
           await AppRepository()
               .verifyOTP(
             otp: event.otp,
-            accesstoken: prefs.getString(
-              Strings.accesstoken,
-            )!,
+            accesstoken: GetIt.instance.get<TokenManager>().token ?? '',
             mobilenumber: event.mobilenumber,
           )
               .then((value) async {
             if (value["code"] == 401) {
-              emit.call(TokenExpired());
             } else if (value["code"] == 201) {
               emit.call(OtpFailed(
                 error: value["message"].toString(),
               ));
             } else if (value["code"] == 200) {
               final _verifyotp = VerifyOtp.fromJson(value);
+              await prefs.setString(
+                Strings.accesstoken,
+                GetIt.instance.get<TokenManager>().token ?? '',
+              );
               if (_verifyotp.email == "") {
                 emit.call(NewUser(verifyOTP: _verifyotp));
               } else {
-                await prefs
-                    .setString(
+                await prefs.setString(
                   Strings.userid,
                   _verifyotp.userId,
+                );
+                await prefs
+                    .setString(
+                  Strings.accesstoken,
+                  GetIt.instance.get<TokenManager>().token ?? '',
                 )
                     .whenComplete(() {
                   emit.call(AlreadyUser());
@@ -49,6 +57,10 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
               }
               //
             }
+          }).catchError((e) {
+            emit.call(OtpFailed(
+              error: e.toString(),
+            ));
           });
         } on Exception catch (e) {
           emit.call(OtpFailed(
@@ -65,17 +77,19 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
             email: event.email,
             password: event.password,
             userid: event.userId,
+            firstname: event.firstName ?? '',
+            lastName: event.lastName ?? '',
             accesstoken: prefs.getString(
               Strings.accesstoken,
             )!,
           )
-              .then((value) {
+              .then((value) async {
             if (value["code"] == 401) {
-              emit.call(TokenExpired());
+              AppRepository().saveAccessToken();
             } else if (value["code"] == 201) {
               emit.call(UserFailed(error: value["message"]));
             } else if (value["code"] == 200) {
-              prefs.setString(
+              await prefs.setString(
                 Strings.userid,
                 event.userId,
               );
@@ -96,15 +110,13 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
           await AppRepository()
               .loginbypassword(
             password: event.password,
-            accesstoken: prefs.getString(
-              Strings.accesstoken,
-            )!,
+            accesstoken: GetIt.instance.get<TokenManager>().token ?? '',
             mobilenumber: event.mobilenumber,
           )
               .then(
             (value) async {
               if (value["code"] == 401) {
-                emit.call(TokenExpired());
+                AppRepository().saveAccessToken();
               } else if (value["code"] == 201) {
                 emit.call(
                   LoginFail(
@@ -112,6 +124,10 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
                   ),
                 );
               } else if (value["code"] == 200) {
+                await prefs.setString(
+                  Strings.accesstoken,
+                  GetIt.instance.get<TokenManager>().token ?? '',
+                );
                 var _verifyotp = VerifyOtp.fromJson(value);
                 if (_verifyotp.userId.isEmpty) {
                   emit.call(
@@ -121,6 +137,10 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
                     ),
                   );
                 }
+                await prefs.setString(
+                  Strings.accesstoken,
+                  GetIt.instance.get<TokenManager>().token ?? '',
+                );
                 await prefs.setString(
                   Strings.userid,
                   _verifyotp.userId,
@@ -136,6 +156,35 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
         } catch (e) {
           emit.call(
             LoginFail(
+              error: e.toString(),
+            ),
+          );
+        }
+      } else if (event is ForgortPassword) {
+        emit.call(LoginLoading());
+        try {
+          await AppRepository()
+              .forgotPassword(
+            password: event.password,
+            mobilenumber: event.mobilenumber,
+          )
+              .then(
+            (value) async {
+              if (value["code"] == 401) {
+              } else if (value["code"] == 201) {
+                emit.call(
+                  ForgotPasswordSuccess(),
+                );
+              } else if (value["code"] == 200) {
+                emit.call(
+                  ForgotPasswordSuccess(),
+                );
+              }
+            },
+          );
+        } catch (e) {
+          emit.call(
+            ForgotPasswordFail(
               error: e.toString(),
             ),
           );

@@ -1,57 +1,21 @@
 import 'package:multitrip_user/api/api_base_helper.dart';
 import 'package:multitrip_user/models/accesstoken.dart';
 import 'package:multitrip_user/models/address.dart';
-import 'package:multitrip_user/shared/shared.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class AppRepository {
   ApiBaseHelper helper = ApiBaseHelper();
 
-// Refresh Token API
-  Future<dynamic> getrefreshtoken() async {
-    final response = await helper.post(
-      "get_refresh_token",
-      {
-        "client_id": "ID:ZLEAC0HTM7V206H784M2",
-        "client_secret": "KEY:U2IJZF01G64O4YQDGHCX",
-      },
-      {},
-    );
-
-    return response;
-  }
-
-// Access Token API
-  Future<dynamic> getaccesstoken({
-    required String refreshtoken,
-  }) async {
-    final response = await helper.post(
-      "get_access_token",
-      {"refresh_token": refreshtoken},
-      {},
-    );
-
-    return response;
-  }
-
 // Check Moblie Number
   Future<dynamic> douserlogin({
-    required String accesstoken,
     required String devicetype,
     required String mobilenumber,
     required String fcm,
   }) async {
-    final response = await helper.post(
-      "login",
-      {
-        "mobile_number": mobilenumber,
-        "device_type": devicetype,
-        "fcm_id": fcm,
-      },
-      {
-        "access_token": accesstoken,
-      },
-    );
+    final response = await helper.post("login", {
+      "mobile_number": mobilenumber,
+      "device_type": devicetype,
+      "fcm_id": fcm,
+    }, {});
 
     return response;
   }
@@ -79,6 +43,8 @@ class AppRepository {
   Future<dynamic> usersignup(
       {required String userid,
       required String email,
+      required String firstname,
+      required String lastName,
       required String password,
       required String accesstoken}) async {
     final response = await helper.post(
@@ -87,6 +53,8 @@ class AppRepository {
         "user_id": userid,
         "email": email,
         "password": password,
+        'first_name': firstname,
+        'last_name': lastName
       },
       {
         "access_token": accesstoken,
@@ -112,6 +80,24 @@ class AppRepository {
     );
 
     return response;
+  }
+
+  Future<dynamic> getHtmlData({
+    required String userid,
+    required String accesstoken,
+    required String endpoint,
+  }) async {
+    final response = await helper.post(
+      endpoint,
+      {
+        "user_id": userid,
+      },
+      {
+        "access_token": accesstoken,
+      },
+    );
+
+    return response['content'];
   }
 
 // Add New Member
@@ -164,6 +150,22 @@ class AppRepository {
     return response;
   }
 
+  Future<dynamic> saveFcmToken({
+    required String accesstoken,
+    required String userid,
+    required String fcmToken,
+  }) async {
+    final response = await helper.post(
+      "update_customer_token",
+      {"user_id": userid, "fcm_id": fcmToken},
+      {
+        "access_token": accesstoken,
+      },
+    );
+
+    return response;
+  }
+
 // Login By Password
   Future<dynamic> loginbypassword({
     required String mobilenumber,
@@ -179,6 +181,22 @@ class AppRepository {
       {
         "access_token": accesstoken,
       },
+    );
+
+    return response;
+  }
+
+  Future<dynamic> forgotPassword({
+    required String mobilenumber,
+    required String password,
+  }) async {
+    final response = await helper.post(
+      "forgot_password",
+      {
+        "mobile_number": mobilenumber,
+        "password": password,
+      },
+      {},
     );
 
     return response;
@@ -321,6 +339,22 @@ class AppRepository {
     return response;
   }
 
+  Future<dynamic> removeAddress(
+      {required String accesstoken,
+      required String userid,
+      required String element}) async {
+    print("User id is $userid");
+    final response = await helper.post(
+      "remove_address",
+      {"user_id": userid, 'place_id': element},
+      {
+        "access_token": accesstoken,
+      },
+    );
+
+    return response;
+  }
+
   Future<dynamic> bookride(
       {required String accesstoken,
       required dynamic booking_number,
@@ -345,23 +379,6 @@ class AppRepository {
     );
 
     return response;
-  }
-
-  Future<void> tokenExpired() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-
-    await getaccesstoken(
-      refreshtoken: prefs.getString(Strings.refreshtoken)!,
-    ).then((value) async {
-      if (value == null || value['code'] == null) {}
-
-      if (value["code"] == 200) {
-        var accessToken = AccessToken.fromJson(value);
-
-        await prefs.setString(Strings.accesstoken, accessToken.accessToken);
-      }
-    });
-    //  context.showSnackBar(context, msg: value["message"]);
   }
 
   // Verify OTP
@@ -410,7 +427,9 @@ class AppRepository {
         "access_token": accesstoken,
       },
     );
-
+    if (response['code'] == 401) {
+      await saveAccessToken();
+    }
     return response;
   }
 
@@ -427,6 +446,9 @@ class AppRepository {
         "access_token": accesstoken,
       },
     );
+    if (response['code'] == 401) {
+      await saveAccessToken();
+    }
 
     return response;
   }
@@ -446,7 +468,9 @@ class AppRepository {
         "access_token": accesstoken,
       },
     );
-
+    if (response['code'] == 401) {
+      await saveAccessToken();
+    }
     return response;
   }
 
@@ -465,7 +489,151 @@ class AppRepository {
         "access_token": accesstoken,
       },
     );
+    if (response['code'] == 401) {
+      await saveAccessToken();
+    }
+    return response;
+  }
+
+  Future<dynamic> ratingTheDriver(
+      {required String user_id,
+      required String accesstoken,
+      required String booking_number,
+      required double rating,
+      String? comments}) async {
+    final response = await helper.post(
+      "customer_rating",
+      {
+        "user_id": user_id,
+        "booking_number": booking_number,
+        "rating": rating.toString(),
+        "review": comments
+      },
+      {
+        "access_token": accesstoken,
+      },
+    );
+    if (response['code'] == 401) {
+      await saveAccessToken();
+    }
+    return response;
+  }
+
+  Future<dynamic> getDriverLatLng({
+    required String driverId,
+    required String accesstoken,
+  }) async {
+    final response = await helper.post(
+      "get_user_lat_long",
+      {
+        "user_id": driverId,
+      },
+      {
+        "access_token": accesstoken,
+      },
+    );
+
+    if (response['code'] == 401) {
+      await saveAccessToken();
+    }
+    return response;
+  }
+
+  Future<dynamic> bookingHistory({
+    required String userId,
+    required String accesstoken,
+  }) async {
+    final response = await helper.post(
+      "customer_booking_history",
+      {
+        "user_id": userId,
+      },
+      {
+        "access_token": accesstoken,
+      },
+    );
+    if (response['code'] == 401) {
+      await saveAccessToken();
+    }
+    return response;
+  }
+
+  Future<dynamic> checkDriverAssigningPolling({
+    required String userId,
+    required String accesstoken,
+    String? bookingId,
+  }) async {
+    final response = await helper.post(
+      "check_booking_driver",
+      {"user_id": userId, "booking_number": bookingId},
+      {
+        "access_token": accesstoken,
+      },
+    );
+    if (response['code'] == 401) {
+      await saveAccessToken();
+    }
 
     return response;
   }
+
+  Future<dynamic> checkBookingPolling({
+    required String userId,
+    required String accesstoken,
+    String? bookingId,
+  }) async {
+    final response = await helper.post(
+      "ride_status",
+      {
+        "user_id": userId,
+        "booking_number": bookingId,
+      },
+      {
+        "access_token": accesstoken,
+      },
+    );
+    if (response['code'] == 401) {
+      await saveAccessToken();
+    }
+    return response;
+  }
+
+  Future<dynamic> cancelBooking({
+    required String userId,
+    required String accesstoken,
+    String? bookingId,
+  }) async {
+    final response = await helper.post(
+      "cancel_ride",
+      {"user_id": userId, "booking_number": bookingId},
+      {
+        "access_token": accesstoken,
+      },
+    );
+    if (response['code'] == 401) {
+      await saveAccessToken();
+    }
+
+    return response;
+  }
+
+  Future<dynamic> currentBooking({
+    required String userId,
+    required String accesstoken,
+  }) async {
+    final response = await helper.post(
+      "current_booking",
+      {"user_id": userId},
+      {
+        "access_token": accesstoken,
+      },
+    );
+    if (response['code'] == 401) {
+      await saveAccessToken();
+    }
+
+    return response;
+  }
+
+  saveAccessToken() {}
 }

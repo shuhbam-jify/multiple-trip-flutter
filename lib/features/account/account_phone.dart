@@ -1,5 +1,6 @@
 import 'package:country_picker/country_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_overlay_loader/flutter_overlay_loader.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -148,9 +149,12 @@ class _AccountPhoneState extends State<AccountPhone> {
                         sizedBoxWithWidth(10),
                         Expanded(
                           child: TextFormField(
-                            keyboardType: TextInputType.phone,
+                            keyboardType: TextInputType.number,
                             maxLength: 11,
                             controller: _textController,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly
+                            ],
                             decoration: InputDecoration(
                               counterText: '',
                               hintText: "Mobile Number",
@@ -212,7 +216,6 @@ class _AccountPhoneState extends State<AccountPhone> {
   }
 
   Future<void> _handleOnTap() async {
-    FocusScope.of(context).unfocus();
     if (_textController.text.isEmpty) {
       context.showSnackBar(context, msg: 'Please enter the fields');
       return;

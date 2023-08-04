@@ -38,7 +38,6 @@ class BookrideBloc extends Bloc<BookrideEvent, BookrideState> {
                 ),
               );
             } else if (value["code"] == 401) {
-              emit.call(TokenExpired());
             } else {
               emit.call(
                 BookRideFail(

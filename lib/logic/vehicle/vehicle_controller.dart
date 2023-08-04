@@ -44,6 +44,7 @@ class VehicleController extends ChangeNotifier {
         Loader.hide();
         notifyListeners();
       } else if (value["code"] == 401) {
+        AppRepository().saveAccessToken();
         // Provider.of<AuthController>(context, listen: false).refreshaccesstoken(
         //     context: context, function: addvehicle(context: context));
       } else if (value["code"] == 201) {
@@ -84,6 +85,7 @@ class VehicleController extends ChangeNotifier {
         Loader.hide();
         notifyListeners();
       } else if (value["code"] == 401) {
+        AppRepository().saveAccessToken();
         // Provider.of<AuthController>(
         //   context,
         //   listen: false,
@@ -145,6 +147,7 @@ class VehicleController extends ChangeNotifier {
         Loader.hide();
         notifyListeners();
       } else if (value["code"] == 401) {
+        AppRepository().saveAccessToken();
         // Provider.of<AuthController>(
         //   context,
         //   listen: false,

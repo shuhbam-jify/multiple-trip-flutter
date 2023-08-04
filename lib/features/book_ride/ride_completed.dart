@@ -47,32 +47,7 @@ class _RideCompletedState extends State<RideCompleted> {
           AppGoogleMap(),
           Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                width: double.infinity,
-                color: AppColors.appColor,
-                child: Column(
-                  children: [
-                    Text(
-                      "Thanks For riding with Sam",
-                      style: GoogleFonts.poppins(
-                        color: Colors.black,
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                    Text(
-                      "We hope you enjoyed your ride",
-                      style: GoogleFonts.poppins(
-                        color: AppColors.colorgrey,
-                        fontSize: 13.sp,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    )
-                  ],
-                ),
-              )
-            ],
+            children: [],
           )
         ],
       ),

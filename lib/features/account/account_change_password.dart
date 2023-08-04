@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:multitrip_user/api/app_repository.dart';
 import 'package:multitrip_user/app_enverionment.dart';
 import 'package:multitrip_user/blocs/account/account_controller.dart';
-import 'package:multitrip_user/blocs/token/token_bloc.dart';
+
 import 'package:multitrip_user/features/auth/login/login_mobile.dart';
 import 'package:multitrip_user/shared/shared.dart';
 import 'package:multitrip_user/shared/ui/common/spacing.dart';
@@ -241,9 +241,6 @@ class _AccountChangePasswordState extends State<AccountChangePassword> {
               userid: prefs.getString(Strings.userid)!)
           .then((value) {
         if (value["code"] == 401) {
-          BlocProvider.of<TokenBloc>(context).add(
-            FetchAccessToken(context: context),
-          );
         } else if (value["code"] == 201) {
           Loader.hide();
           context.showSnackBar(context, msg: value["message"]);
@@ -253,9 +250,6 @@ class _AccountChangePasswordState extends State<AccountChangePassword> {
           // BlocProvider.of<DashboardBloc>(context).add(
           //   InitBloc(),
           // );
-
-          BlocProvider.of<TokenBloc>(context)
-              .add(FetchRefreshToken(context: context));
           AppEnvironment.navigator.pushAndRemoveUntil(
             MaterialPageRoute<void>(
                 builder: (BuildContext context) => const LoginMobile()),

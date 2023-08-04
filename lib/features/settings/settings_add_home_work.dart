@@ -17,6 +17,7 @@ import 'package:multitrip_user/models/ridehistory.dart';
 import 'package:multitrip_user/shared/shared.dart';
 import 'package:multitrip_user/shared/ui/common/spacing.dart';
 import 'package:multitrip_user/themes/app_text.dart';
+import 'package:panara_dialogs/panara_dialogs.dart';
 
 class AddHomeAndWork extends StatefulWidget {
   const AddHomeAndWork({super.key});
@@ -90,9 +91,8 @@ class _AddHomeAndWorkState extends State<AddHomeAndWork> {
                     },
                     cursorColor: AppColors.grey500,
                     decoration: InputDecoration(
-                      hintText: "Enter  location",
+                      hintText: "Enter location",
                       hintStyle: AppText.text14w400.copyWith(
-                        fontSize: 12.sp,
                         color: AppColors.grey500,
                       ),
                       contentPadding: EdgeInsets.all(8.w),
@@ -111,7 +111,7 @@ class _AddHomeAndWorkState extends State<AddHomeAndWork> {
                       Loader.hide();
                     }
                     if (state is AddAddressSucess) {
-                      context.showSnackBar(context, msg: 'Saved Successfully');
+                      context.showSnackBar(context, msg: ' Successfully');
                     }
                   },
                   builder: (context, state) {
@@ -125,48 +125,78 @@ class _AddHomeAndWorkState extends State<AddHomeAndWork> {
                         ),
                         children: List.generate(
                             state.address.address.length,
-                            (index) => Row(
-                                  children: [
-                                    Container(
-                                      height: 32.h,
-                                      width: 32.w,
-                                      child: Icon(
-                                        Icons.star,
-                                        color: Colors.white,
-                                        size: 16,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.greydark,
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
-                                    SizedBox(width: 12.w),
-                                    Flexible(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            state.address.address[index]
-                                                .addressLine1,
-                                            style: AppText.text16w400.copyWith(
-                                              color: AppColors.black,
-                                            ),
+                            (index) => GestureDetector(
+                                  onTap: () {
+                                    PanaraConfirmDialog.show(context,
+                                        title: "Delete",
+                                        message:
+                                            "Do you want to delete this place?",
+                                        onTapCancel: () {
+                                      Navigator.pop(context);
+                                    }, onTapConfirm: () async {
+                                      Navigator.pop(context);
+
+                                      context.read<AddressBloc>().add(
+                                          RemoveAddress(
+                                              element: state.address
+                                                  .address[index].placeId));
+                                    },
+                                        panaraDialogType:
+                                            PanaraDialogType.normal,
+                                        barrierDismissible: false,
+                                        cancelButtonText: 'No',
+                                        confirmButtonText: 'yes'
+                                        // optional parameter (default is true)
+                                        );
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          height: 32.h,
+                                          width: 32.w,
+                                          child: Icon(
+                                            Icons.star,
+                                            color: Colors.white,
+                                            size: 16,
                                           ),
-                                          Text(
-                                            state.address.address[index]
-                                                .addressLine2,
-                                            maxLines: 3,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: AppText.text14w400.copyWith(
-                                              color: AppColors.grey500,
-                                              fontSize: 13.sp,
-                                            ),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.greydark,
+                                            shape: BoxShape.circle,
                                           ),
-                                        ],
-                                      ),
+                                        ),
+                                        SizedBox(width: 12.w),
+                                        Flexible(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                state.address.address[index]
+                                                    .addressLine1,
+                                                style:
+                                                    AppText.text16w400.copyWith(
+                                                  color: AppColors.black,
+                                                ),
+                                              ),
+                                              Text(
+                                                state.address.address[index]
+                                                    .addressLine2,
+                                                maxLines: 3,
+                                                overflow: TextOverflow.ellipsis,
+                                                style:
+                                                    AppText.text14w400.copyWith(
+                                                  color: AppColors.grey500,
+                                                  fontSize: 13.sp,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ],
+                                  ),
                                 )),
                       );
                     }

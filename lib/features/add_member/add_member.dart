@@ -192,7 +192,7 @@ class _AddMemberState extends State<AddMember> {
                 30,
               ),
               Text(
-                  "By tapping `\"Add member\", you confirm that your friend aggreed to share their contact information with us and to recieve SMS about this trip.",
+                  "By tapping Add member, you confirm that your friend aggreed to share their contact information with us and to recieve SMS about this trip.",
                   style: AppText.text15w400.copyWith(
                     color: AppColors.grey500,
                   )),

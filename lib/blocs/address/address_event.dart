@@ -23,6 +23,14 @@ class AddAddress extends AddressEvent {
   List<Object?> get props => [];
 }
 
+class RemoveAddress extends AddressEvent {
+  String? element;
+  RemoveAddress({required this.element});
+  @override
+  // TODO: implement props
+  List<Object?> get props => [];
+}
+
 class AddFailedAddress extends AddressEvent {
   @override
   // TODO: implement props

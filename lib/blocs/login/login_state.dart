@@ -74,3 +74,12 @@ class LogoutFail extends LoginState {
   final String error;
   LogoutFail({required this.error});
 }
+
+class ForgotPasswordSuccess extends LoginState {
+  ForgotPasswordSuccess();
+}
+
+class ForgotPasswordFail extends LoginState {
+  final String error;
+  ForgotPasswordFail({required this.error});
+}

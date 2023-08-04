@@ -1,5 +1,6 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter_overlay_loader/flutter_overlay_loader.dart';
 import 'package:meta/meta.dart';
 import 'package:multitrip_user/api/app_repository.dart';
 import 'package:multitrip_user/models/address.dart';
@@ -32,12 +33,59 @@ class AddressBloc extends Bloc<AddressEvent, AddressState> {
               emit.call(
                 AddAddressSucess(),
               );
+              add(
+                FetchAddress(),
+              );
             } else if (value["code"] == 201) {
               emit.call(
                 AddAddressSucess(),
               );
             } else if (value["code"] == 401) {
-              emit.call(TokenExpired());
+            } else {
+              emit.call(
+                AddressFailed(
+                  error: value["message"],
+                ),
+              );
+            }
+          });
+        } catch (e) {
+          emit.call(
+            AddressFailed(
+              error: e.toString(),
+            ),
+          );
+        }
+      }
+      if (event is RemoveAddress) {
+        print("Event is $emit");
+
+        final SharedPreferences prefs = await SharedPreferences.getInstance();
+
+        try {
+          await AppRepository()
+              .removeAddress(
+            userid: prefs.getString(
+              Strings.userid,
+            )!,
+            accesstoken: prefs.getString(
+              Strings.accesstoken,
+            )!,
+            element: event.element!,
+          )
+              .then((value) {
+            if (value["code"] == 200) {
+              emit.call(
+                AddAddressSucess(),
+              );
+              add(
+                FetchAddress(),
+              );
+            } else if (value["code"] == 201) {
+              emit.call(
+                AddAddressSucess(),
+              );
+            } else if (value["code"] == 401) {
             } else {
               emit.call(
                 AddressFailed(
@@ -84,7 +132,6 @@ class AddressBloc extends Bloc<AddressEvent, AddressState> {
                 AddressNotFound(),
               );
             } else if (value["code"] == 401) {
-              emit.call(TokenExpired());
             } else {
               emit.call(
                 AddressFailed(

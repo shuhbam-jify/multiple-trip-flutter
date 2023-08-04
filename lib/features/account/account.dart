@@ -8,6 +8,7 @@ import 'package:multitrip_user/features/account/account_info.dart';
 import 'package:multitrip_user/features/settings/settings.dart';
 import 'package:multitrip_user/shared/shared.dart';
 import 'package:multitrip_user/shared/ui/common/spacing.dart';
+import 'package:multitrip_user/widgets/html_render.dart';
 import 'package:provider/provider.dart';
 
 class Account extends StatefulWidget {
@@ -70,7 +71,9 @@ class _AccountState extends State<Account> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        model.userModel?.name ?? "N/A",
+                        (model.userModel?.name?.isEmpty ?? true)
+                            ? 'Full Name'
+                            : model.userModel?.name ?? '',
                         style: GoogleFonts.poppins(
                           color: AppColors.black,
                           fontSize: 20.sp,
@@ -185,32 +188,43 @@ class _AccountState extends State<Account> {
                   sizedBoxWithWidth(
                     10,
                   ),
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      vertical: 20.h,
-                      horizontal: 10.w,
-                    ),
-                    child: Column(
-                      children: [
-                        Icon(
-                          Icons.access_time_filled_rounded,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                        Text(
-                          "Previous booking",
-                          style: GoogleFonts.poppins(
-                            color: Colors.white,
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w500,
+                  GestureDetector(
+                    onTap: () {
+                      AppEnvironment.navigator.pushAndRemoveUntil(
+                          MaterialPageRoute(
+                            builder: (_) => PagesWidget(
+                              currentTab: 1,
+                            ),
                           ),
-                        )
-                      ],
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.green,
-                      borderRadius: BorderRadius.circular(
-                        4,
+                          (_) => false);
+                    },
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        vertical: 20.h,
+                        horizontal: 10.w,
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.access_time_filled_rounded,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                          Text(
+                            "Previous booking",
+                            style: GoogleFonts.poppins(
+                              color: Colors.white,
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          )
+                        ],
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.green,
+                        borderRadius: BorderRadius.circular(
+                          4,
+                        ),
                       ),
                     ),
                   )
@@ -239,14 +253,14 @@ class _AccountState extends State<Account> {
                     Icon(
                       Icons.settings_outlined,
                       color: AppColors.black,
-                      size: 20,
+                      size: 24,
                     ),
                     sizedBoxWithWidth(3),
                     Text(
                       "Settings",
                       style: GoogleFonts.poppins(
                         color: AppColors.black,
-                        fontSize: 14.sp,
+                        fontSize: 16.sp,
                         fontWeight: FontWeight.w300,
                       ),
                     )
@@ -254,23 +268,30 @@ class _AccountState extends State<Account> {
                 ),
               ),
               sizedBoxWithHeight(10),
-              Row(
-                children: [
-                  Icon(
-                    Icons.info,
-                    color: AppColors.black,
-                    size: 20,
-                  ),
-                  sizedBoxWithWidth(3),
-                  Text(
-                    "Legal",
-                    style: GoogleFonts.poppins(
+              GestureDetector(
+                onTap: () {
+                  AppEnvironment.navigator.push(MaterialPageRoute(
+                      builder: (_) =>
+                          HtmlRenderWidgetScreen(endPoint: '/legal_policy')));
+                },
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info,
                       color: AppColors.black,
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w300,
+                      size: 24,
                     ),
-                  )
-                ],
+                    sizedBoxWithWidth(3),
+                    Text(
+                      "Legal",
+                      style: GoogleFonts.poppins(
+                        color: AppColors.black,
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w300,
+                      ),
+                    )
+                  ],
+                ),
               ),
               sizedBoxWithHeight(40),
               Divider(
@@ -279,19 +300,19 @@ class _AccountState extends State<Account> {
               ),
               sizedBoxWithHeight(40),
               Text(
-                "Total Spending - \$ ${model.userModel?.totalSpend}",
+                "Total Spending - \$ ${model.userModel?.totalSpend ?? 0}",
                 style: GoogleFonts.poppins(
                     color: AppColors.black,
                     fontWeight: FontWeight.w300,
-                    fontSize: 15.sp),
+                    fontSize: 16.sp),
               ),
               sizedBoxWithHeight(10),
               Text(
-                "Total miles drive - ${model.userModel?.totalRide} miles",
+                "Total miles drive - ${model.userModel?.totalRide ?? 0} miles",
                 style: GoogleFonts.poppins(
                     color: AppColors.black,
                     fontWeight: FontWeight.w300,
-                    fontSize: 15.sp),
+                    fontSize: 16.sp),
               )
             ],
           ),

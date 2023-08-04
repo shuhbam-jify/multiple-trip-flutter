@@ -15,6 +15,8 @@ class SplashBackground extends StatelessWidget {
         AppImage(
           Images.background,
           fit: BoxFit.cover,
+          height: MediaQuery.of(context).size.height * 0.65,
+          width: double.infinity,
         ),
         Padding(
             padding: EdgeInsets.only(

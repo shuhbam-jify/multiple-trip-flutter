@@ -1,15 +1,9 @@
-import 'dart:convert';
-
-import 'package:flutter/foundation.dart';
-
 import 'package:flutter/material.dart';
 import 'package:multitrip_user/bottomnavigationbar.dart';
 import 'package:multitrip_user/features/auth/login/login_mobile.dart';
 import 'package:multitrip_user/features/auth/login/login_password.dart';
 import 'package:multitrip_user/features/auth/login/otp_login.dart';
 import 'package:multitrip_user/features/auth/signup/signup.dart';
-import 'package:multitrip_user/features/book_ride/pickupdropaddress.dart';
-
 import 'package:multitrip_user/features/splash/splash.dart';
 
 part 'auth_routes.dart';

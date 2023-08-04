@@ -83,6 +83,8 @@ class _AppGoogleMapState extends State<AppGoogleMap> {
         zoom: 15.0,
       );
     }
-    setState(() {});
+    if (mounted) {
+      setState(() {});
+    }
   }
 }

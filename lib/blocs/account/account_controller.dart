@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:multitrip_user/api/app_repository.dart';
+import 'package:multitrip_user/models/booking_history.dart';
 import 'package:multitrip_user/models/user.dart';
 import 'package:multitrip_user/shared/shared.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -7,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class AccountController extends ChangeNotifier {
   bool isLoading = false;
   UserModel? userModel;
+  BookingHistory? history;
   Future<void> getPofileData(
       {Function()? onFailure, bool isEnableLoading = true}) async {
     try {
@@ -30,8 +32,11 @@ class AccountController extends ChangeNotifier {
       }
       if (resultant['code'] != null && resultant['code'] == 200) {
         userModel = UserModel.fromJson(resultant);
+        notifyListeners();
       } else {
-        onFailure?.call();
+        if (isEnableLoading) {
+          onFailure?.call();
+        }
       }
     } catch (e) {
       // TODO
@@ -224,6 +229,41 @@ class AccountController extends ChangeNotifier {
       }
     } catch (e) {
       // TODO
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> getBookingHistory({
+    Function()? onFailure,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      isLoading = true;
+      notifyListeners();
+
+      final resultant = await AppRepository().bookingHistory(
+        accesstoken: prefs.getString(
+          Strings.accesstoken,
+        )!,
+        userId: prefs.getString(
+          Strings.userid,
+        )!,
+      );
+      isLoading = false;
+      notifyListeners();
+
+      if (resultant['code'] != null &&
+          (resultant['code'] == 200 || resultant['code'] == 201)) {
+        history = BookingHistory.fromJson(resultant);
+        notifyListeners();
+      } else {
+        onFailure?.call();
+      }
+    } catch (e) {
+      onFailure?.call();
     } finally {
       isLoading = false;
       notifyListeners();

@@ -23,15 +23,6 @@ class _MembersSheetState extends State<MembersSheet> {
   @override
   void initState() {
     super.initState();
-    widget.members.add(
-      Member(
-          id: "",
-          fname: "Me",
-          lname: "",
-          mobileNumber: "",
-          email: "",
-          address: ""),
-    );
   }
 
   @override

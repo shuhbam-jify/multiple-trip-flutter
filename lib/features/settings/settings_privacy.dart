@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
 import 'package:google_fonts/google_fonts.dart';
+import 'package:multitrip_user/app_enverionment.dart';
 import 'package:multitrip_user/shared/shared.dart';
 import 'package:multitrip_user/shared/ui/common/spacing.dart';
+import 'package:multitrip_user/widgets/html_render.dart';
 
 class SettingsPrivacy extends StatefulWidget {
   const SettingsPrivacy({super.key});

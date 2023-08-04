@@ -4,9 +4,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_overlay_loader/flutter_overlay_loader.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:multitrip_user/app_enverionment.dart';
 import 'package:multitrip_user/blocs/account/account_controller.dart';
+import 'package:multitrip_user/bottomnavigationbar.dart';
 import 'package:multitrip_user/features/account/account_change_password.dart';
 import 'package:multitrip_user/features/account/account_email.dart';
 import 'package:multitrip_user/features/account/account_name.dart';
@@ -227,7 +229,7 @@ class _AccountInfoState extends State<AccountInfo> {
                       Strings.basicinfo,
                       style: GoogleFonts.poppins(
                         color: AppColors.black,
-                        fontSize: 16.sp,
+                        fontSize: 18.sp,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -297,6 +299,9 @@ class _AccountInfoState extends State<AccountInfo> {
                                   fontWeight: FontWeight.w400,
                                 ),
                               ),
+                              SizedBox(
+                                width: 8.w,
+                              ),
                               Icon(
                                 Icons.check_circle,
                                 color: AppColors.green,
@@ -341,6 +346,9 @@ class _AccountInfoState extends State<AccountInfo> {
                                   fontWeight: FontWeight.w400,
                                 ),
                               ),
+                              SizedBox(
+                                width: 8.w,
+                              ),
                               Icon(
                                 Icons.check_circle,
                                 color: AppColors.green,
@@ -365,8 +373,8 @@ class _AccountInfoState extends State<AccountInfo> {
                     "Security",
                     style: GoogleFonts.poppins(
                       color: AppColors.black,
-                      fontSize: 20.sp,
-                      fontWeight: FontWeight.w500,
+                      fontSize: 24.sp,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   sizedBoxWithHeight(40),
@@ -374,8 +382,8 @@ class _AccountInfoState extends State<AccountInfo> {
                     "Logging in",
                     style: GoogleFonts.poppins(
                       color: AppColors.black,
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w400,
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   sizedBoxWithHeight(20),
@@ -475,9 +483,37 @@ class _AccountInfoState extends State<AccountInfo> {
                     onTap: () async {
                       final image = await ImagePicker()
                           .pickImage(source: ImageSource.gallery);
-                      if (image != null) {
-                        _profileImage.value = image;
-                        _uploadImage(image.path);
+                      final croppedFile = await ImageCropper().cropImage(
+                        sourcePath: image?.path ?? '',
+                        aspectRatioPresets: [
+                          CropAspectRatioPreset.square,
+                          CropAspectRatioPreset.ratio3x2,
+                          CropAspectRatioPreset.original,
+                          CropAspectRatioPreset.ratio4x3,
+                          CropAspectRatioPreset.ratio16x9
+                        ],
+                        uiSettings: [
+                          AndroidUiSettings(
+                              toolbarTitle: 'Cropper',
+                              toolbarColor: Colors.deepOrange,
+                              toolbarWidgetColor: Colors.white,
+                              initAspectRatio: CropAspectRatioPreset.original,
+                              lockAspectRatio: false),
+                          IOSUiSettings(
+                            title: 'Cropper',
+                          ),
+                          WebUiSettings(
+                            context: context,
+                          ),
+                        ],
+                      );
+                      if (croppedFile != null) {
+                        _profileImage.value = XFile(croppedFile.path);
+                        _uploadImage(croppedFile.path);
+                      } else {
+                        Navigator.pop(context);
+                        context.showSnackBar(context,
+                            msg: 'Please retry again');
                       }
                     },
                     child: Container(
@@ -488,7 +524,7 @@ class _AccountInfoState extends State<AccountInfo> {
                       ),
                       child: Center(
                         child: Text(
-                          Strings.update,
+                          Strings.update + ' Photo',
                           style: AppText.text15w500.copyWith(
                             color: Colors.white,
                           ),
@@ -559,7 +595,13 @@ class _AccountInfoState extends State<AccountInfo> {
             onSuccess: () {
               Loader.hide();
               context.showSnackBar(context, msg: 'Successfully Updated');
-              Navigator.pop(context);
+              AppEnvironment.navigator.pushAndRemoveUntil(
+                  MaterialPageRoute(
+                    builder: (_) => PagesWidget(
+                      currentTab: 2,
+                    ),
+                  ),
+                  (_) => false);
             },
           );
     } catch (e) {

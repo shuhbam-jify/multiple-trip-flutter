@@ -37,7 +37,6 @@ class ConfirmrideBloc extends Bloc<ConfirmrideEvent, ConfirmrideState> {
             } else if (value["code"] == 201) {
               emit.call(ConfirmFail(error: value["message"]));
             } else if (value["code"] == 401) {
-              emit.call(TokenExpired());
             } else {
               emit.call(ConfirmFail(error: value["message"]));
             }

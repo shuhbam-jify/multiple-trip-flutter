@@ -5,10 +5,7 @@ import 'package:flutter_overlay_loader/flutter_overlay_loader.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:multitrip_user/app_enverionment.dart';
 import 'package:multitrip_user/blocs/login/login_bloc.dart';
-import 'package:multitrip_user/blocs/token/token_bloc.dart';
-import 'package:multitrip_user/bottomnavigationbar.dart';
 import 'package:multitrip_user/features/auth/login/widgets/nextfloatingbutton.dart';
-import 'package:multitrip_user/features/auth/signup/signup.dart';
 import 'package:multitrip_user/routes.dart';
 import 'package:multitrip_user/shared/shared.dart';
 import 'package:multitrip_user/shared/ui/common/spacing.dart';
@@ -53,8 +50,6 @@ class _OtpLoginState extends State<OtpLogin> {
           // );
         } else if (state is TokenExpired) {
           Loader.hide();
-          BlocProvider.of<TokenBloc>(context)
-              .add(FetchAccessToken(context: context));
         } else if (state is NewUser) {
           Loader.hide();
           AppEnvironment.navigator.pushReplacementNamed(AuthRoutes.signupScreen,

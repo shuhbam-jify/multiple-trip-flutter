@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:multitrip_user/api/app_repository.dart';
 
 import 'package:multitrip_user/features/add_member/add_member.dart';
 import 'package:multitrip_user/logic/vehicle/vehicle_controller.dart';
@@ -15,6 +16,13 @@ class AddVehicle extends StatefulWidget {
 }
 
 class _AddVehicleState extends State<AddVehicle> {
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    AppRepository().saveAccessToken();
+  }
+
   @override
   Widget build(BuildContext context) {
     final controller = Provider.of<VehicleController>(context, listen: false);

@@ -7,6 +7,7 @@ class AuthRoutes {
   static const authLeading = '/auth-route';
 
   static const loginmobile = '$authLeading/login-mobile';
+  static const forgotPassword = '$authLeading/forgot_password';
 
   static const loginpassword = '$authLeading/login-password';
   static const loginotp = '$authLeading/login-otp';

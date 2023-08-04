@@ -42,7 +42,6 @@ class MemberBloc extends Bloc<MemberEvent, MemberState> {
                 MemberLoaded(listMembers: listMembers),
               );
             } else if (value["code"] == 401) {
-              emit.call(MemberTokenExpired());
             } else {
               var listMembers = ListMembers(
                 code: 200,

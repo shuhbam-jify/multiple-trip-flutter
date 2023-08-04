@@ -14,7 +14,6 @@ import 'package:multitrip_user/api/app_repository.dart';
 import 'package:multitrip_user/blocs/address/address_bloc.dart' as address;
 import 'package:multitrip_user/blocs/confirmride/confirmride_bloc.dart';
 import 'package:multitrip_user/blocs/member/member_bloc.dart';
-import 'package:multitrip_user/blocs/token/token_bloc.dart';
 import 'package:multitrip_user/features/book_ride/vehiclelist.dart';
 import 'package:multitrip_user/features/book_ride/widgets/membersSheet.dart';
 import 'package:multitrip_user/models/address.dart';
@@ -72,8 +71,10 @@ class _PickupDropAddressState extends State<PickupDropAddress> {
   @override
   void initState() {
     pickuplatlong = LatLng(widget.lat, widget.long);
+    AppRepository().saveAccessToken();
     pickupController.text = widget.pickupaddess;
     fetchlocation();
+
     locationBlocBloc = BlocProvider.of<LocationBlocBloc>(context);
     memberBloc = BlocProvider.of<MemberBloc>(context);
     super.initState();
@@ -381,10 +382,6 @@ class _PickupDropAddressState extends State<PickupDropAddress> {
                         } else if (state is TokenExpired) {
                           Loader.hide();
                           // context.showSnackBar(context, msg: "Token Expired");
-                          AppRepository().tokenExpired();
-                          context
-                              .read<TokenBloc>()
-                              .add(FetchAccessToken(context: context));
                         }
                       },
                     ),
@@ -559,7 +556,6 @@ class _PickupDropAddressState extends State<PickupDropAddress> {
               Loader.hide();
               context.showSnackBar(context, msg: "Token Expired");
             }
-            // TODO: implement listener
           },
           child: InkWell(
             onTap: () async {

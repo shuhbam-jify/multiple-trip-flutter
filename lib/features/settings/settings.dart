@@ -5,12 +5,12 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:multitrip_user/api/app_repository.dart';
 import 'package:multitrip_user/blocs/account/account_controller.dart';
 import 'package:multitrip_user/blocs/login/login_bloc.dart';
-import 'package:multitrip_user/blocs/token/token_bloc.dart';
 import 'package:multitrip_user/features/auth/login/login_mobile.dart';
 import 'package:multitrip_user/features/settings/settings_add_home_work.dart';
 import 'package:multitrip_user/features/settings/settings_shortcuts.dart';
 import 'package:multitrip_user/shared/shared.dart';
 import 'package:multitrip_user/shared/ui/common/spacing.dart';
+import 'package:multitrip_user/widgets/html_render.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -70,8 +70,6 @@ class _SettingsState extends State<Settings> {
             //   InitBloc(),
             // );
 
-            BlocProvider.of<TokenBloc>(context)
-                .add(FetchRefreshToken(context: context));
             AppEnvironment.navigator.pushReplacement(
               MaterialPageRoute(
                 builder: (context) => LoginMobile(),
@@ -91,7 +89,7 @@ class _SettingsState extends State<Settings> {
                   "Settings",
                   style: GoogleFonts.poppins(
                     color: Colors.black,
-                    fontSize: 18.sp,
+                    fontSize: 24.sp,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -99,7 +97,7 @@ class _SettingsState extends State<Settings> {
                 Row(
                   children: [
                     Container(
-                      padding: EdgeInsets.all(15),
+                      // padding: EdgeInsets.all(15),
                       clipBehavior: Clip.hardEdge,
                       height: 60.h,
                       width: 60.w,
@@ -118,10 +116,12 @@ class _SettingsState extends State<Settings> {
                       child:
                           (model.userModel?.profilePhoto?.isNotEmpty ?? false)
                               ? null
-                              : Icon(
-                                  Icons.person,
-                                  size: 40,
-                                  color: Colors.white,
+                              : Center(
+                                  child: Icon(
+                                    Icons.person,
+                                    size: 40,
+                                    color: Colors.white,
+                                  ),
                                 ),
                     ),
                     sizedBoxWithWidth(8),
@@ -171,9 +171,16 @@ class _SettingsState extends State<Settings> {
                     text: "Saved Places",
                   ),
                 ),
-                settingoptions(
-                  icon: Icon(Icons.lock),
-                  text: "Privacy",
+                GestureDetector(
+                  onTap: () {
+                    AppEnvironment.navigator.push(MaterialPageRoute(
+                        builder: (_) => HtmlRenderWidgetScreen(
+                            endPoint: '/privacy_policy')));
+                  },
+                  child: settingoptions(
+                      icon: Icon(Icons.lock),
+                      text: "Privacy",
+                      subTitle: 'Manage the data you share with us'),
                 ),
                 Spacer(),
                 Divider(
@@ -182,50 +189,35 @@ class _SettingsState extends State<Settings> {
                 ),
                 InkWell(
                   onTap: () async {
-                    Loader.show(context,
-                        progressIndicator: CircularProgressIndicator(
-                          color: AppColors.green,
-                        ));
+                    Loader.show(
+                      context,
+                    );
 
                     final SharedPreferences prefs =
                         await SharedPreferences.getInstance();
 
                     try {
-                      await AppRepository()
-                          .douserlogout(
-                              accesstoken: prefs.getString(
-                                Strings.accesstoken,
-                              )!,
-                              userid: prefs.getString(Strings.userid)!)
-                          .then((value) async {
-                        if (value["code"] == 401) {
-                          BlocProvider.of<TokenBloc>(context).add(
-                            FetchAccessToken(context: context),
-                          );
-                        } else if (value["code"] == 201) {
-                          Loader.hide();
-                          context.showSnackBar(context, msg: value["message"]);
-                        } else if (value["code"] == 200) {
-                          Loader.hide();
-                          await prefs.remove(Strings.userid);
-                          // BlocProvider.of<DashboardBloc>(context).add(
-                          //   InitBloc(),
-                          // );
-                          AppEnvironment.navigator.pushAndRemoveUntil(
-                            MaterialPageRoute<void>(
-                                builder: (BuildContext context) =>
-                                    const LoginMobile()),
-                            (route) {
-                              return false;
-                            },
-                          );
+                      await AppRepository().douserlogout(
+                          accesstoken: prefs.getString(
+                            Strings.accesstoken,
+                          )!,
+                          userid: prefs.getString(Strings.userid)!);
 
-                          BlocProvider.of<TokenBloc>(context)
-                              .add(FetchRefreshToken(context: context));
+                      await prefs.remove(Strings.accesstoken);
+                      // BlocProvider.of<DashboardBloc>(context).add(
+                      //   InitBloc(),
+                      // );
+                      Loader.hide();
+                      AppEnvironment.navigator.pushAndRemoveUntil(
+                        MaterialPageRoute<void>(
+                            builder: (BuildContext context) =>
+                                const LoginMobile()),
+                        (route) {
+                          return false;
+                        },
+                      );
 
-                          prefs.clear();
-                        }
-                      });
+                      prefs.clear();
                     } catch (e) {
                       Loader.hide();
                       context.showSnackBar(context, msg: e.toString());
@@ -253,10 +245,8 @@ class _SettingsState extends State<Settings> {
   }
 }
 
-Widget settingoptions({
-  required Widget icon,
-  required String text,
-}) {
+Widget settingoptions(
+    {required Widget icon, required String text, String? subTitle}) {
   return Column(
     children: [
       sizedBoxWithHeight(15),
@@ -264,13 +254,28 @@ Widget settingoptions({
         children: [
           icon,
           sizedBoxWithWidth(10),
-          Text(
-            text,
-            style: GoogleFonts.poppins(
-              color: Colors.black,
-              fontSize: 14.sp,
-              fontWeight: FontWeight.w300,
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                text,
+                style: GoogleFonts.poppins(
+                  color: Colors.black,
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              if (subTitle != null) ...{
+                Text(
+                  subTitle,
+                  style: GoogleFonts.poppins(
+                    color: Colors.black,
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w300,
+                  ),
+                ),
+              },
+            ],
           ),
           Spacer(),
           Icon(
